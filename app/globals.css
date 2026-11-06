@@ -5,32 +5,36 @@
 /* Mörkt (standard) */
 :root {
   color-scheme: dark;
-  --ink: 10 10 11;
-  --card: 20 20 22;
-  --line: 38 38 42;
-  --mute: 139 139 147;
-  --fg: 244 244 245;
-  --gold: 214 180 106;
+  --ink: 9 9 11;
+  --card: 22 22 26;
+  --line: 255 255 255;
+  --line-a: 0.07;
+  --mute: 146 146 156;
+  --fg: 245 245 247;
+  --gold: 222 190 120;
   --grid: 255 255 255;
-  --grid-a: 0.07;
+  --grid-a: 0.06;
+  --shadow: 0 0 0;
 }
 /* Ljust */
 :root.light {
   color-scheme: light;
-  --ink: 248 248 245;
+  --ink: 246 245 242;
   --card: 255 255 255;
-  --line: 226 226 229;
-  --mute: 110 110 120;
-  --fg: 20 20 23;
-  --gold: 184 145 63;
+  --line: 0 0 0;
+  --line-a: 0.07;
+  --mute: 108 108 118;
+  --fg: 18 18 22;
+  --gold: 176 136 56;
   --grid: 0 0 0;
-  --grid-a: 0.08;
+  --grid-a: 0.055;
+  --shadow: 60 50 30;
 }
 
 html, body { background: rgb(var(--ink)); color: rgb(var(--fg)); -webkit-tap-highlight-color: transparent; }
-body { min-height: 100dvh; position: relative; transition: background-color .25s, color .25s; }
+body { min-height: 100dvh; position: relative; transition: background-color .3s, color .3s; }
 
-/* Rutnät + guldglöd i bakgrunden */
+/* Rutnät + guldglöd */
 body::before {
   content: '';
   position: fixed;
@@ -38,27 +42,66 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    radial-gradient(60rem 32rem at 50% -8%, rgb(var(--gold) / 0.14), transparent 70%),
+    radial-gradient(50rem 28rem at 15% -10%, rgb(var(--gold) / 0.16), transparent 65%),
+    radial-gradient(40rem 24rem at 100% 10%, rgb(var(--gold) / 0.07), transparent 60%),
     linear-gradient(rgb(var(--grid) / var(--grid-a)) 1px, transparent 1px),
     linear-gradient(90deg, rgb(var(--grid) / var(--grid-a)) 1px, transparent 1px);
-  background-size: 100% 100%, 44px 44px, 44px 44px;
-  background-position: center top;
-  -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, #000 40%, transparent 100%);
-  mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, #000 40%, transparent 100%);
+  background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 100% 80% at 50% 0%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(ellipse 100% 80% at 50% 0%, #000 35%, transparent 100%);
 }
 
 @layer components {
-  .card { @apply rounded-3xl border border-line bg-card/80 backdrop-blur; }
-  .input { @apply w-full rounded-2xl border border-line bg-ink px-4 py-3 text-[15px] outline-none transition placeholder:text-mute focus:border-gold; }
-  .label { @apply mb-1.5 block text-xs font-medium uppercase tracking-wider text-mute; }
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-[15px] font-semibold transition active:scale-[.98] disabled:opacity-40; }
-  .btn-gold { @apply btn bg-gold text-ongold hover:brightness-110; }
-  .btn-ghost { @apply btn border border-line bg-card hover:border-mute; }
-  .chip { @apply rounded-2xl border border-line bg-card px-4 py-3 text-left transition hover:border-mute; }
-  .chip-on { @apply border-gold bg-gold-soft; }
+  .glass {
+    background: rgb(var(--card) / 0.62);
+    border: 1px solid rgb(var(--line) / var(--line-a));
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    backdrop-filter: blur(22px) saturate(1.4);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 40px -22px rgb(var(--shadow) / 0.55);
+  }
+  .card { @apply glass rounded-[28px]; }
+  .hair { border-color: rgb(var(--line) / var(--line-a)); }
+  .divide-hair > * + * { border-top: 1px solid rgb(var(--line) / var(--line-a)); }
+
+  .input {
+    @apply w-full rounded-2xl px-4 py-3.5 text-[15px] outline-none transition placeholder:text-mute;
+    background: rgb(var(--fg) / 0.045);
+    border: 1px solid transparent;
+  }
+  .input:focus { border-color: rgb(var(--gold) / 0.7); background: rgb(var(--fg) / 0.06); box-shadow: 0 0 0 4px rgb(var(--gold) / 0.12); }
+  .label { @apply mb-2 block text-[13px] font-medium text-mute; }
+
+  .btn { @apply inline-flex select-none items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-semibold transition duration-200 active:scale-[.97] disabled:pointer-events-none disabled:opacity-40; }
+  .btn-gold {
+    @apply btn text-ongold;
+    background: linear-gradient(180deg, #f0d99f 0%, #d2ab5c 100%);
+    box-shadow: 0 1px 0 rgb(255 255 255 / .5) inset, 0 12px 28px -12px rgb(210 171 92 / .8);
+  }
+  .btn-gold:hover { filter: brightness(1.06); }
+  .btn-soft { @apply btn; background: rgb(var(--fg) / 0.06); }
+  .btn-soft:hover { background: rgb(var(--fg) / 0.1); }
+  .icon-btn { @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition active:scale-95; background: rgb(var(--fg) / 0.06); }
+  .icon-btn:hover { background: rgb(var(--fg) / 0.11); }
+
+  .tile { @apply rounded-[22px] p-4 text-left transition duration-200 active:scale-[.985]; background: rgb(var(--fg) / 0.04); border: 1px solid transparent; }
+  .tile:hover { background: rgb(var(--fg) / 0.07); }
+  .tile-on { border-color: rgb(var(--gold) / 0.8) !important; background: rgb(var(--gold) / 0.1) !important; }
+
+  .pill { @apply rounded-full px-4 py-2 text-sm font-medium transition; background: rgb(var(--fg) / 0.05); }
+  .pill:hover { background: rgb(var(--fg) / 0.09); }
+  .pill-on { @apply text-ongold; background: rgb(var(--gold)) !important; }
+
+  .gold-text { background: linear-gradient(180deg, #f3dfa9, #c99d4a); -webkit-background-clip: text; background-clip: text; color: transparent; }
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
-@keyframes rise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
-.rise { animation: rise .35s cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.985) } to { opacity: 1; transform: none } }
+.rise { animation: rise .55s cubic-bezier(.16,1,.3,1) both; }
+.rise-1 { animation-delay: .05s } .rise-2 { animation-delay: .1s } .rise-3 { animation-delay: .15s } .rise-4 { animation-delay: .2s }
+@keyframes sheet { from { transform: translateY(100%) } to { transform: none } }
+.sheet { animation: sheet .45s cubic-bezier(.16,1,.3,1) both; }
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+.fade { animation: fade .3s ease both; }
+:root.light .gold-text { background-image: linear-gradient(180deg, #c99a3e, #8a6420); }

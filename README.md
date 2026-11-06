@@ -3,6 +3,8 @@
 Next.js 15 + Supabase + Tailwind. Mobil-först, mörkt tema med guld.
 
 ## Vad som finns
+- **Startsida** `/` – alla salonger och frisörer, sök och stadsfilter
+- **Kundkonto** – logga in, se alla bokningar (`/me`), profil med bild, lämna omdömen
 - **Kundsidan** `/{salong}` – välj tjänst → frisör (eller "första lediga") → dag och tid → namn + telefon → klart
 - **Bekräftelsesida** `/b/{token}` – kunden kan lägga till bokningen i sin kalender eller avboka själv
 - **Frisörpanelen** `/dashboard`
@@ -16,7 +18,7 @@ Next.js 15 + Supabase + Tailwind. Mobil-först, mörkt tema med guld.
 - **Dubbelbokningsskydd i databasen** – två kunder kan inte få samma tid
 
 ## Kom igång (ca 10 min)
-1. **Supabase** → nytt projekt → SQL Editor → klistra in och kör `supabase/schema.sql`.
+1. **Supabase** → nytt projekt → SQL Editor → kör `supabase/schema.sql` och sedan `supabase/002_upgrade.sql`.
    (Valfritt: kör `supabase/seed-demo.sql` för en demosalong på `/demo`.)
 2. Supabase → Authentication → URL Configuration:
    - Site URL: `https://din-domän.vercel.app`

@@ -37,7 +37,7 @@ export async function addManualBooking(f: FormData) {
   })
   if (error) back('/dashboard', error.code === '23P01' ? 'Krockar med en annan bokning' : 'Kunde inte spara')
   revalidatePath('/dashboard')
-  redirect('/dashboard?ok=1')
+  redirect(`/dashboard?ok=1&d=${date}`)
 }
 
 export async function cancelBooking(f: FormData) {
@@ -132,6 +132,7 @@ export async function saveSalon(f: FormData) {
       slug,
       description: s(f, 'description') || null,
       address: s(f, 'address') || null,
+      city: s(f, 'city') || null,
       phone: s(f, 'phone') || null,
       instagram: s(f, 'instagram').replace('@', '') || null,
       logo_url: s(f, 'logo_url') || null,

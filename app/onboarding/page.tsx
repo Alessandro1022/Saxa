@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { RESERVED, slugify } from '@/lib/salon'
+import { Flash, Logo } from '@/components/ui'
 
 async function createSalon(formData: FormData) {
   'use server'
@@ -18,7 +19,7 @@ async function createSalon(formData: FormData) {
 
   const { data: salon, error } = await supabase
     .from('salons')
-    .insert({ name, slug, owner_id: user.id })
+    .insert({ name, slug, owner_id: user.id, city: String(formData.get('city') ?? '').trim() || null })
     .select('id')
     .single()
   if (error || !salon)
@@ -49,27 +50,21 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
   const { e } = await searchParams
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6">
-      <h1 className="text-3xl font-bold">Välkommen 👋</h1>
-      <p className="mt-2 text-mute">Tre fält, sen är du igång.</p>
-      {e && <p className="mt-4 rounded-2xl bg-red-500/10 p-3 text-sm text-red-300">{e}</p>}
-      <form action={createSalon} className="mt-8 grid gap-4">
-        <div>
-          <label className="label">Salongens namn</label>
-          <input className="input" name="name" required placeholder="Ali's Barbershop" />
+    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-10">
+      <div className="rise">
+        <Logo size={52} />
+        <h1 className="mt-6 text-3xl font-bold tracking-tight">Skapa din salong</h1>
+        <p className="mt-1.5 text-mute">Fyra fält, sen är du bokningsbar.</p>
+      </div>
+      <div className="mt-6"><Flash e={e} /></div>
+      <form action={createSalon} className="rise rise-1 grid gap-3">
+        <input className="input" name="name" required placeholder="Salongens namn, t.ex. Ali's Barbershop" />
+        <div className="flex items-center rounded-2xl pl-4" style={{ background: 'rgb(var(--fg) / .045)' }}>
+          <span className="text-sm text-mute">saxa.se/</span>
+          <input className="w-full bg-transparent px-1 py-3.5 text-[15px] outline-none placeholder:text-mute" name="slug" placeholder="din-salong (valfritt)" />
         </div>
-        <div>
-          <label className="label">Bokningslänk</label>
-          <div className="flex items-center rounded-2xl border border-line bg-ink pl-4 focus-within:border-gold">
-            <span className="text-sm text-mute">saxa.se/</span>
-            <input className="w-full bg-transparent px-1 py-3 outline-none" name="slug" placeholder="alis-barbershop" />
-          </div>
-          <p className="mt-1 text-xs text-mute">Lämna tomt så skapas den från namnet.</p>
-        </div>
-        <div>
-          <label className="label">Ditt namn (visas för kunder)</label>
-          <input className="input" name="you" placeholder="Ali" />
-        </div>
+        <input className="input" name="city" placeholder="Stad, t.ex. Göteborg" />
+        <input className="input" name="you" placeholder="Ditt namn (visas för kunder)" />
         <button className="btn-gold mt-2">Skapa salong</button>
       </form>
     </main>

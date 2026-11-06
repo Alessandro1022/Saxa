@@ -2,56 +2,52 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { addDays, prettyDate, todayIn, WEEKDAYS, weekdayOf, type Slot } from '@/lib/time'
+import Link from 'next/link'
+import { ArrowLeft, Clock, Sparkles } from 'lucide-react'
+import { addDays, prettyDate, todayIn, WEEKDAYS, weekdayOf, MONTHS, type Slot } from '@/lib/time'
+import { Avatar, Rating } from './ui'
 
-type Staff = { id: string; name: string; title: string | null; bio: string | null; photo_url: string | null }
+type Staff = { id: string; name: string; title: string | null; bio: string | null; photo_url: string | null; rating?: { avg: number; n: number } | null }
 type Service = { id: string; name: string; description: string | null; duration_min: number; price_sek: number | null }
 
 const DAYS = 30
-
-function Avatar({ s, size = 'h-12 w-12' }: { s: { name: string; photo_url?: string | null }; size?: string }) {
-  return (
-    <div className={`${size} shrink-0 overflow-hidden rounded-2xl bg-line`}>
-      {s.photo_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={s.photo_url} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <div className="flex h-full items-center justify-center font-semibold text-mute">{s.name[0]}</div>
-      )}
-    </div>
-  )
-}
+const STEPS = ['Tjänst', 'Frisör', 'Tid', 'Klart']
 
 export default function BookingFlow({
   salonId,
   tz,
   staff,
   services,
+  initialStaff,
+  me,
 }: {
   salonId: string
   tz: string
   staff: Staff[]
   services: Service[]
+  initialStaff?: string
+  me: { name: string; phone: string; email: string } | null
 }) {
   const router = useRouter()
+  const preset = initialStaff ?? (staff.length === 1 ? staff[0].id : '')
   const [step, setStep] = useState(1)
   const [service, setService] = useState<Service | null>(null)
-  const [staffId, setStaffId] = useState<string>(staff.length === 1 ? staff[0].id : '')
+  const [staffId, setStaffId] = useState(preset)
   const today = useMemo(() => todayIn(tz), [tz])
   const [date, setDate] = useState(today)
   const [slots, setSlots] = useState<Slot[] | null>(null)
   const [time, setTime] = useState('')
-  const [form, setForm] = useState({ name: '', phone: '', email: '', note: '' })
+  const [form, setForm] = useState({ name: me?.name ?? '', phone: me?.phone ?? '', email: me?.email ?? '', note: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
   const days = useMemo(() => Array.from({ length: DAYS }, (_, i) => addDays(today, i)), [today])
-  const staffName = staffId === 'any' ? 'Första lediga' : staff.find((s) => s.id === staffId)?.name
+  const chosen = staff.find((s) => s.id === staffId)
+  const staffName = staffId === 'any' ? 'Första lediga' : chosen?.name
 
   useEffect(() => {
     if (step !== 3 || !service || !staffId) return
     setSlots(null)
-    setTime('')
     const ctrl = new AbortController()
     fetch(`/api/slots?salon=${salonId}&service=${service.id}&staff=${staffId}&date=${date}`, { signal: ctrl.signal })
       .then((r) => r.json())
@@ -60,199 +56,191 @@ export default function BookingFlow({
     return () => ctrl.abort()
   }, [step, service, staffId, date, salonId])
 
+  function go(n: number) {
+    setError('')
+    setStep(n)
+    document.getElementById('boka')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  function back() {
+    if (step === 3 && preset) return go(1)
+    go(step - 1)
+  }
+
   async function submit() {
     setBusy(true)
     setError('')
-    const r = await fetch('/api/book', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ salonId, serviceId: service?.id, staffId, date, time, ...form }),
-    })
-    const d = await r.json()
-    if (!r.ok) {
+    try {
+      const r = await fetch('/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ salonId, serviceId: service?.id, staffId, date, time, ...form }),
+      })
+      const d = await r.json()
+      if (!r.ok) {
+        setError(d.error ?? 'Något gick fel')
+        if (r.status === 409) setStep(3)
+        setBusy(false)
+        return
+      }
+      router.push(`/b/${d.token}`)
+    } catch {
+      setError('Kunde inte nå servern')
       setBusy(false)
-      setError(d.error ?? 'Något gick fel')
-      if (r.status === 409) setStep(3)
-      return
     }
-    router.push(`/b/${d.token}`)
   }
 
-  const Title = ({ n, t }: { n: number; t: string }) => (
-    <div className="mb-4 flex items-center gap-3">
-      {n > 1 && (
-        <button onClick={() => setStep(n === 3 && staff.length === 1 ? 1 : n - 1)} className="btn-ghost h-10 w-10 !p-0" aria-label="Tillbaka">
-          ←
-        </button>
-      )}
-      <h2 className="text-lg font-semibold">{t}</h2>
-      <span className="ml-auto text-xs text-mute">{n}/4</span>
-    </div>
-  )
+  const [, mo] = date.split('-').map(Number)
 
   return (
-    <section className="px-5 pt-8">
-      {error && <p className="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{error}</p>}
+    <section className="mt-10 px-5">
+      <div className="flex items-center gap-3">
+        {step > 1 && (
+          <button onClick={back} className="icon-btn" aria-label="Tillbaka"><ArrowLeft size={18} /></button>
+        )}
+        <div className="flex-1">
+          <div className="text-xs font-medium uppercase tracking-wider text-gold">Steg {step} av 4</div>
+          <h2 className="text-xl font-bold tracking-tight">
+            {['Välj tjänst', 'Välj frisör', 'Välj tid', 'Nästan klart'][step - 1]}
+          </h2>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-4 gap-1.5">
+        {STEPS.map((s, i) => (
+          <div key={s} className="h-1 overflow-hidden rounded-full" style={{ background: 'rgb(var(--fg) / .08)' }}>
+            <div className="h-full rounded-full bg-gold transition-all duration-500" style={{ width: step > i ? '100%' : '0%' }} />
+          </div>
+        ))}
+      </div>
 
-      {step === 1 && (
-        <div className="rise">
-          <Title n={1} t="Välj tjänst" />
+      {error && <p className="fade mt-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>}
+
+      <div key={step} className="rise mt-5">
+        {step === 1 && (
           <div className="grid gap-2.5">
             {services.map((s) => (
               <button
                 key={s.id}
-                className={`chip flex items-center gap-3 ${service?.id === s.id ? 'chip-on' : ''}`}
+                className={`tile flex items-center gap-4 ${service?.id === s.id ? 'tile-on' : ''}`}
                 onClick={() => {
                   setService(s)
-                  setStep(staff.length === 1 ? 3 : 2)
+                  go(preset ? 3 : 2)
                 }}
               >
-                <div className="flex-1">
-                  <div className="font-medium">{s.name}</div>
-                  <div className="text-sm text-mute">{s.description}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold">{s.name}</div>
+                  <div className="mt-0.5 flex items-center gap-1 text-sm text-mute">
+                    <Clock size={13} /> {s.duration_min} min{s.description ? ` · ${s.description}` : ''}
+                  </div>
                 </div>
-                <div className="text-right">
-                  {s.price_sek != null && <div className="font-semibold">{s.price_sek} kr</div>}
-                  <div className="text-xs text-mute">{s.duration_min} min</div>
-                </div>
+                {s.price_sek != null && <div className="rounded-full bg-gold-soft px-3 py-1.5 text-sm font-semibold text-gold">{s.price_sek} kr</div>}
               </button>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {step === 2 && (
-        <div className="rise">
-          <Title n={2} t="Välj frisör" />
+        {step === 2 && (
           <div className="grid gap-2.5">
-            <button
-              className={`chip flex items-center gap-3 ${staffId === 'any' ? 'chip-on' : ''}`}
-              onClick={() => {
-                setStaffId('any')
-                setStep(3)
-              }}
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gold-soft text-xl text-gold">⚡</div>
+            <button className={`tile flex items-center gap-4 ${staffId === 'any' ? 'tile-on' : ''}`} onClick={() => { setStaffId('any'); go(3) }}>
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-soft text-gold"><Sparkles size={22} /></div>
               <div>
-                <div className="font-medium">Första lediga</div>
+                <div className="font-semibold">Första lediga</div>
                 <div className="text-sm text-mute">Flest tider att välja på</div>
               </div>
             </button>
             {staff.map((s) => (
-              <button
-                key={s.id}
-                className={`chip flex items-center gap-3 ${staffId === s.id ? 'chip-on' : ''}`}
-                onClick={() => {
-                  setStaffId(s.id)
-                  setStep(3)
-                }}
-              >
-                <Avatar s={s} />
-                <div>
-                  <div className="font-medium">{s.name}</div>
-                  <div className="text-sm text-mute">{s.bio || s.title || 'Frisör'}</div>
+              <button key={s.id} className={`tile flex items-center gap-4 ${staffId === s.id ? 'tile-on' : ''}`} onClick={() => { setStaffId(s.id); go(3) }}>
+                <Avatar name={s.name} src={s.photo_url} size={56} />
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold">{s.name}</div>
+                  <div className="truncate text-sm text-mute">{s.bio || s.title || 'Frisör'}</div>
                 </div>
+                <Rating avg={s.rating?.avg} n={s.rating?.n} />
               </button>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {step === 3 && (
-        <div className="rise">
-          <Title n={3} t="Välj tid" />
-          <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-2">
-            {days.map((d) => {
-              const on = d === date
-              return (
-                <button
-                  key={d}
-                  onClick={() => setDate(d)}
-                  className={`flex h-[72px] w-14 shrink-0 flex-col items-center justify-center rounded-2xl border transition ${
-                    on ? 'border-gold bg-gold text-ongold' : 'border-line bg-card'
-                  }`}
-                >
-                  <span className={`text-[11px] uppercase ${on ? '' : 'text-mute'}`}>{d === today ? 'Idag' : WEEKDAYS[weekdayOf(d)]}</span>
-                  <span className="text-lg font-semibold">{Number(d.slice(8))}</span>
-                </button>
-              )
-            })}
-          </div>
-          <div className="mt-4 min-h-[140px]">
-            {slots === null ? (
-              <div className="grid grid-cols-4 gap-2">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="h-11 animate-pulse rounded-xl bg-card" />
-                ))}
-              </div>
-            ) : slots.length === 0 ? (
-              <p className="card p-5 text-center text-mute">Inga lediga tider den här dagen. Testa en annan dag.</p>
-            ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {slots.map((s) => (
+        {step === 3 && (
+          <div>
+            <div className="mb-2 text-sm font-medium capitalize text-mute">{MONTHS[mo - 1]}</div>
+            <div className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+              {days.map((d) => {
+                const on = d === date
+                return (
                   <button
-                    key={s.time}
-                    onClick={() => {
-                      setTime(s.time)
-                      setStep(4)
-                      setError('')
-                    }}
-                    className={`h-11 rounded-xl border text-sm font-medium transition ${
-                      time === s.time ? 'border-gold bg-gold text-ongold' : 'border-line bg-card hover:border-mute'
-                    }`}
+                    key={d}
+                    onClick={() => { setDate(d); setTime('') }}
+                    className={`flex h-[78px] w-[58px] shrink-0 flex-col items-center justify-center rounded-[22px] transition duration-300 ${on ? 'bg-gold text-ongold shadow-[0_10px_24px_-10px_rgb(210_171_92/.9)]' : 'hover:bg-fg/[0.08]'}`}
+                    style={on ? undefined : { background: 'rgb(var(--fg) / .045)' }}
                   >
-                    {s.time}
+                    <span className={`text-[11px] font-medium uppercase ${on ? '' : 'text-mute'}`}>{d === today ? 'Idag' : WEEKDAYS[weekdayOf(d)]}</span>
+                    <span className="text-xl font-bold">{Number(d.slice(8))}</span>
                   </button>
-                ))}
-              </div>
-            )}
+                )
+              })}
+            </div>
+            <div className="mt-5 min-h-[150px]">
+              {slots === null ? (
+                <div className="grid grid-cols-4 gap-2">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="h-12 animate-pulse rounded-full" style={{ background: 'rgb(var(--fg) / .05)' }} />
+                  ))}
+                </div>
+              ) : slots.length === 0 ? (
+                <div className="rounded-[24px] px-6 py-10 text-center" style={{ background: 'rgb(var(--fg) / .04)' }}>
+                  <p className="font-medium">Fullbokat den här dagen</p>
+                  <p className="text-sm text-mute">Svep och testa en annan dag.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-2">
+                  {slots.map((s) => (
+                    <button
+                      key={s.time}
+                      onClick={() => { setTime(s.time); go(4) }}
+                      className={`h-12 rounded-full text-[15px] font-semibold transition duration-200 active:scale-95 ${time === s.time ? 'bg-gold text-ongold' : 'hover:bg-fg/[0.1]'}`}
+                      style={time === s.time ? undefined : { background: 'rgb(var(--fg) / .05)' }}
+                    >
+                      {s.time}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {step === 4 && (
-        <div className="rise">
-          <Title n={4} t="Dina uppgifter" />
-          <form
-            className="grid gap-3"
-            onSubmit={(e) => {
-              e.preventDefault()
-              submit()
-            }}
-          >
-            <div>
-              <label className="label">Namn</label>
-              <input className="input" required autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </div>
-            <div>
-              <label className="label">Telefon</label>
-              <input className="input" required type="tel" autoComplete="tel" inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            </div>
-            <div>
-              <label className="label">E-post (valfritt)</label>
-              <input className="input" type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            </div>
-            <div>
-              <label className="label">Meddelande (valfritt)</label>
-              <textarea className="input min-h-[80px]" placeholder="T.ex. önskemål om klippning" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-            </div>
-            <button className="btn-gold mt-2" disabled={busy}>
-              {busy ? 'Bokar…' : 'Bekräfta bokning'}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {service && (
-        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-ink/90 backdrop-blur">
-          <div className="mx-auto flex max-w-md items-center gap-3 px-5 py-4 text-sm">
-            <div className="flex-1">
-              <div className="font-semibold">{service.name}</div>
-              <div className="text-mute">
-                {[staffName, time ? `${prettyDate(date)} ${time}` : null].filter(Boolean).join(' · ') || `${service.duration_min} min`}
+        {step === 4 && service && (
+          <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); submit() }}>
+            <div className="card flex items-center gap-4 p-4">
+              {chosen ? <Avatar name={chosen.name} src={chosen.photo_url} size={52} /> : <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-gold-soft text-gold"><Sparkles size={20} /></div>}
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold">{service.name}</div>
+                <div className="text-sm text-mute">{prettyDate(date)} kl {time} · {staffName}</div>
               </div>
+              {service.price_sek != null && <div className="font-bold text-gold">{service.price_sek} kr</div>}
             </div>
-            {service.price_sek != null && <div className="text-base font-semibold text-gold">{service.price_sek} kr</div>}
+            <input className="input" required placeholder="Namn" autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input className="input" required type="tel" inputMode="tel" placeholder="Telefon" autoComplete="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <input className="input" type="email" placeholder="E-post (valfritt)" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <textarea className="input min-h-[84px] resize-none" placeholder="Önskemål (valfritt)" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+            <button className="btn-gold mt-1 !py-4 text-base" disabled={busy}>{busy ? 'Bokar…' : 'Bekräfta bokning'}</button>
+            {!me && (
+              <p className="text-center text-sm text-mute">
+                <Link href="/login" className="font-medium text-gold">Logga in</Link> för att spara dina bokningar
+              </p>
+            )}
+          </form>
+        )}
+      </div>
+
+      {service && step < 4 && (
+        <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center px-4 pb-[max(env(safe-area-inset-bottom),14px)]">
+          <div className="glass fade flex w-full max-w-md items-center gap-3 rounded-full py-2 pl-5 pr-2">
+            <div className="min-w-0 flex-1 text-sm">
+              <div className="truncate font-semibold">{service.name}</div>
+              <div className="truncate text-mute">{[staffName, `${service.duration_min} min`].filter(Boolean).join(' · ')}</div>
+            </div>
+            {service.price_sek != null && <div className="rounded-full bg-gold px-4 py-2.5 text-sm font-bold text-ongold">{service.price_sek} kr</div>}
           </div>
         </div>
       )}

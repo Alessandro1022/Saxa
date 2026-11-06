@@ -23,12 +23,16 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) {
+  const path = request.nextUrl.pathname
+  const isProtected = path.startsWith('/dashboard') || path.startsWith('/onboarding') || path.startsWith('/me')
+  if (!user && isProtected) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    url.search = `?next=${encodeURIComponent(path)}${path.startsWith('/me') ? '' : '&as=salon'}`
     return NextResponse.redirect(url)
   }
   return response
 }
 
-export const config = { matcher: ['/dashboard/:path*', '/onboarding'] }
+// Kör på allt utom statiska filer så att sessionen alltid hålls färsk
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|api/ical|.*\\.(?:png|jpg|svg|ico)$).*)'] }

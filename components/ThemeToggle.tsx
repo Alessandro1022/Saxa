@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Moon, Sun } from 'lucide-react'
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ className = '' }: { className?: string }) {
   const [light, setLight] = useState(false)
   useEffect(() => setLight(document.documentElement.classList.contains('light')), [])
 
@@ -16,12 +17,8 @@ export default function ThemeToggle() {
   }
 
   return (
-    <button
-      onClick={toggle}
-      aria-label={light ? 'Byt till mörkt läge' : 'Byt till ljust läge'}
-      className="fixed right-4 top-4 z-30 flex h-10 w-10 items-center justify-center rounded-full border border-line bg-card/80 text-lg backdrop-blur transition hover:border-mute"
-    >
-      {light ? '🌙' : '☀️'}
+    <button onClick={toggle} aria-label={light ? 'Mörkt läge' : 'Ljust läge'} className={`icon-btn ${className}`}>
+      {light ? <Moon size={18} /> : <Sun size={18} />}
     </button>
   )
 }

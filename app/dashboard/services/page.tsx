@@ -1,28 +1,30 @@
+import { Clock, Trash2 } from 'lucide-react'
 import { requireSalon } from '@/lib/salon'
 import { saveService, deleteService } from '../actions'
-import Flash from '@/components/Flash'
+import { Flash } from '@/components/ui'
+import Sheet from '@/components/Sheet'
 
 type Svc = { id: string; name: string; description: string | null; duration_min: number; price_sek: number | null; active: boolean; sort: number }
 
 function ServiceForm({ s, nextSort }: { s?: Svc; nextSort: number }) {
   return (
-    <form action={saveService} className="grid grid-cols-6 gap-2.5 p-4">
+    <form action={saveService} className="grid grid-cols-2 gap-3">
       {s && <input type="hidden" name="id" value={s.id} />}
       <input type="hidden" name="sort" value={s?.sort ?? nextSort} />
-      <input className="input col-span-6" name="name" defaultValue={s?.name} placeholder="Tjänst, t.ex. Fade" required />
-      <input className="input col-span-6" name="description" defaultValue={s?.description ?? ''} placeholder="Kort beskrivning (valfritt)" />
-      <div className="col-span-3">
+      <input className="input col-span-2" name="name" defaultValue={s?.name} placeholder="Tjänst, t.ex. Fade" required />
+      <input className="input col-span-2" name="description" defaultValue={s?.description ?? ''} placeholder="Kort beskrivning (valfritt)" />
+      <div>
         <label className="label">Minuter</label>
         <input className="input" name="duration_min" type="number" min={5} max={480} step={5} defaultValue={s?.duration_min ?? 30} required />
       </div>
-      <div className="col-span-3">
+      <div>
         <label className="label">Pris (kr)</label>
         <input className="input" name="price_sek" type="number" min={0} defaultValue={s?.price_sek ?? ''} />
       </div>
-      <label className="col-span-3 flex items-center gap-2 text-sm text-mute">
-        <input type="checkbox" name="active" defaultChecked={s?.active ?? true} className="h-4 w-4 accent-[#d6b46a]" /> Bokningsbar
+      <label className="flex items-center gap-2.5 text-sm">
+        <input type="checkbox" name="active" defaultChecked={s?.active ?? true} className="h-5 w-5 accent-[#d2ab5c]" /> Bokningsbar
       </label>
-      <button className="btn-gold col-span-3 !py-2.5">{s ? 'Spara' : 'Lägg till'}</button>
+      <button className="btn-gold !py-3">{s ? 'Spara' : 'Lägg till'}</button>
     </form>
   )
 }
@@ -35,32 +37,32 @@ export default async function Services({ searchParams }: { searchParams: Promise
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">Tjänster</h1>
+      <h1 className="rise mb-1 text-[26px] font-bold tracking-tight">Tjänster</h1>
+      <p className="rise mb-5 text-sm text-mute">Tryck på en tjänst för att ändra.</p>
       <Flash e={e} />
-      <div className="space-y-3">
-        {list.map((s) => (
-          <details key={s.id} className="card overflow-hidden">
-            <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-4">
-              <div className="flex-1">
-                <div className={`font-medium ${s.active ? '' : 'text-mute line-through'}`}>{s.name}</div>
-                <div className="text-sm text-mute">{s.duration_min} min</div>
+      <div className="grid gap-2.5">
+        {list.map((s, i) => (
+          <details key={s.id} className="card rise group overflow-hidden" style={{ animationDelay: `${i * 0.03}s` }}>
+            <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4">
+              <div className="min-w-0 flex-1">
+                <div className={`font-semibold ${s.active ? '' : 'text-mute line-through'}`}>{s.name}</div>
+                <div className="flex items-center gap-1 text-sm text-mute"><Clock size={13} /> {s.duration_min} min</div>
               </div>
-              <div className="font-semibold">{s.price_sek != null ? `${s.price_sek} kr` : '—'}</div>
+              <div className="rounded-full bg-gold-soft px-3 py-1.5 text-sm font-semibold text-gold">{s.price_sek != null ? `${s.price_sek} kr` : '—'}</div>
             </summary>
-            <div className="border-t border-line">
+            <div className="fade px-5 pb-5">
               <ServiceForm s={s} nextSort={s.sort} />
-              <form action={deleteService} className="px-4 pb-4">
+              <form action={deleteService} className="mt-3">
                 <input type="hidden" name="id" value={s.id} />
-                <button className="text-sm text-red-300 hover:underline">Ta bort tjänst</button>
+                <button className="flex items-center gap-1.5 text-sm text-red-400"><Trash2 size={14} /> Ta bort</button>
               </form>
             </div>
           </details>
         ))}
-        <div className="card">
-          <div className="px-5 pt-4 font-semibold">＋ Ny tjänst</div>
-          <ServiceForm nextSort={list.length} />
-        </div>
       </div>
+      <Sheet title="Ny tjänst" defaultOpen={list.length === 0}>
+        <ServiceForm nextSort={list.length} />
+      </Sheet>
     </div>
   )
 }

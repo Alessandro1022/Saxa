@@ -8,6 +8,7 @@ export type Salon = {
   name: string
   description: string | null
   address: string | null
+  city: string | null
   phone: string | null
   instagram: string | null
   logo_url: string | null
@@ -35,7 +36,7 @@ export async function origin() {
   return `${proto}://${host}`
 }
 
-export const RESERVED = ['login', 'dashboard', 'onboarding', 'api', 'auth', 'b', 'admin', 'app', 'www']
+export const RESERVED = ['login', 'dashboard', 'onboarding', 'api', 'auth', 'b', 'admin', 'app', 'www', 'me', 'for-salonger']
 
 export function slugify(s: string) {
   return s
