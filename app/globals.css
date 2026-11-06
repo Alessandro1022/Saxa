@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+html, body { background: #0a0a0b; color: #f4f4f5; -webkit-tap-highlight-color: transparent; }
+body { background-image: radial-gradient(60rem 30rem at 50% -10%, #d6b46a14, transparent 70%); min-height: 100dvh; }
+
+@layer components {
+  .card { @apply rounded-3xl border border-line bg-card/80 backdrop-blur; }
+  .input { @apply w-full rounded-2xl border border-line bg-ink px-4 py-3 text-[15px] outline-none transition placeholder:text-mute focus:border-gold; }
+  .label { @apply mb-1.5 block text-xs font-medium uppercase tracking-wider text-mute; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-[15px] font-semibold transition active:scale-[.98] disabled:opacity-40; }
+  .btn-gold { @apply btn bg-gold text-ink hover:brightness-110; }
+  .btn-ghost { @apply btn border border-line bg-card hover:border-mute; }
+  .chip { @apply rounded-2xl border border-line bg-card px-4 py-3 text-left transition hover:border-mute; }
+  .chip-on { @apply border-gold bg-gold-soft; }
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+.rise { animation: rise .35s cubic-bezier(.2,.8,.2,1) both; }

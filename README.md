@@ -1,0 +1,39 @@
+# Saxa – bokning för frisörer
+
+Next.js 15 + Supabase + Tailwind. Mobil-först, mörkt tema med guld.
+
+## Vad som finns
+- **Kundsidan** `/{salong}` – välj tjänst → frisör (eller "första lediga") → dag och tid → namn + telefon → klart
+- **Bekräftelsesida** `/b/{token}` – kunden kan lägga till bokningen i sin kalender eller avboka själv
+- **Frisörpanelen** `/dashboard`
+  - Bokningar 14 dagar framåt, dagens intäkt, filter per frisör, ring kunden, avboka
+  - **Lägg in bokning manuellt** (för DM, telefon och drop-in)
+  - Tjänster (pris, tid, på/av)
+  - Personal (bild, bio, arbetstider per veckodag)
+  - **Kalenderkoppling** per frisör: Apple Kalender och Google Kalender (prenumeration)
+  - Salongens profil: logga, omslagsbild, adress, Instagram, bokningslänk
+- **Konto och onboarding** – salongen skapar konto och är bokningsbar på 1 minut (startvärden ingår)
+- **Dubbelbokningsskydd i databasen** – två kunder kan inte få samma tid
+
+## Kom igång (ca 10 min)
+1. **Supabase** → nytt projekt → SQL Editor → klistra in och kör `supabase/schema.sql`.
+   (Valfritt: kör `supabase/seed-demo.sql` för en demosalong på `/demo`.)
+2. Supabase → Authentication → URL Configuration:
+   - Site URL: `https://din-domän.vercel.app`
+   - Redirect URLs: `https://din-domän.vercel.app/auth/callback`
+3. **Vercel** → importera repot → Environment Variables (från Supabase → Settings → API):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (hemlig)
+4. Deploy → gå till `/login` → skapa konto → följ onboarding.
+
+## Kalender
+Prenumerationslänken uppdateras automatiskt. Apple brukar hämta nytt inom 15–60 min, Google kan ta flera timmar.
+Nästa steg: riktig Google-synk (OAuth + Calendar API) så att det kommer in direkt.
+
+## Nästa steg (roadmap)
+- SMS-påminnelse 24 h innan (46elks)
+- Swish-förskott mot no-shows
+- AI-receptionist (Gemini) på bokningssidan
+- Recensioner efter besöket
+- Expo-app för kunder (samma Supabase)
