@@ -75,7 +75,7 @@ export default async function SalonPage({
         <Avatar name={salon.name} src={salon.logo_url} size={84} className="ring-4 ring-[rgb(var(--ink))]" />
         <h1 className="mt-3 text-[30px] font-bold leading-tight tracking-tight">{salon.name}</h1>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-mute">
-          <Rating avg={rating?.avg} n={rating?.n} className="text-fg" />
+          {rating?.n ? <Rating avg={rating.avg} n={rating.n} className="text-fg" /> : <span className="pill !px-3 !py-1 text-xs font-medium text-gold">Ny på Saxa</span>}
           {(salon.address || salon.city) && (
             <span className="flex items-center gap-1"><MapPin size={14} />{[salon.address, salon.city].filter(Boolean).join(', ')}</span>
           )}

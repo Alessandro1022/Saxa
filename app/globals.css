@@ -27,7 +27,7 @@
   --fg: 18 18 22;
   --gold: 176 136 56;
   --grid: 0 0 0;
-  --grid-a: 0.075;
+  --grid-a: 0.06;
   --shadow: 60 50 30;
 }
 
@@ -73,10 +73,10 @@ body::after {
 
   .input {
     @apply w-full rounded-2xl px-4 py-3.5 text-[15px] outline-none transition placeholder:text-mute;
-    background: rgb(var(--fg) / 0.045);
+    background: color-mix(in srgb, rgb(var(--fg)) 4.5%, rgb(var(--ink)));
     border: 1px solid transparent;
   }
-  .input:focus { border-color: rgb(var(--gold) / 0.7); background: rgb(var(--fg) / 0.06); box-shadow: 0 0 0 4px rgb(var(--gold) / 0.12); }
+  .input:focus { border-color: rgb(var(--gold) / 0.7); background: color-mix(in srgb, rgb(var(--fg)) 6%, rgb(var(--ink))); box-shadow: 0 0 0 4px rgb(var(--gold) / 0.12); }
   .label { @apply mb-2 block text-[13px] font-medium text-mute; }
 
   .btn { @apply inline-flex select-none items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-semibold transition duration-200 active:scale-[.97] disabled:pointer-events-none disabled:opacity-40; }
@@ -86,17 +86,17 @@ body::after {
     box-shadow: 0 1px 0 rgb(255 255 255 / .5) inset, 0 12px 28px -12px rgb(210 171 92 / .8);
   }
   .btn-gold:hover { filter: brightness(1.06); }
-  .btn-soft { @apply btn; background: rgb(var(--fg) / 0.06); }
-  .btn-soft:hover { background: rgb(var(--fg) / 0.1); }
-  .icon-btn { @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition active:scale-95; background: rgb(var(--fg) / 0.06); }
-  .icon-btn:hover { background: rgb(var(--fg) / 0.11); }
+  .btn-soft { @apply btn; background: color-mix(in srgb, rgb(var(--fg)) 6%, rgb(var(--ink))); }
+  .btn-soft:hover { background: color-mix(in srgb, rgb(var(--fg)) 10%, rgb(var(--ink))); }
+  .icon-btn { @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition active:scale-95; background: color-mix(in srgb, rgb(var(--fg)) 6%, rgb(var(--ink))); }
+  .icon-btn:hover { background: color-mix(in srgb, rgb(var(--fg)) 11%, rgb(var(--ink))); }
 
-  .tile { @apply rounded-[22px] p-4 text-left transition duration-200 active:scale-[.985]; background: rgb(var(--fg) / 0.04); border: 1px solid transparent; }
-  .tile:hover { background: rgb(var(--fg) / 0.07); }
-  .tile-on { border-color: rgb(var(--gold) / 0.8) !important; background: rgb(var(--gold) / 0.1) !important; }
+  .tile { @apply rounded-[22px] p-4 text-left transition duration-200 active:scale-[.985]; background: color-mix(in srgb, rgb(var(--fg)) 4%, rgb(var(--ink))); border: 1px solid transparent; }
+  .tile:hover { background: color-mix(in srgb, rgb(var(--fg)) 7%, rgb(var(--ink))); }
+  .tile-on { border-color: rgb(var(--gold) / 0.8) !important; background: color-mix(in srgb, rgb(var(--gold)) 12%, rgb(var(--ink))) !important; }
 
-  .pill { @apply rounded-full px-4 py-2 text-sm font-medium transition; background: rgb(var(--fg) / 0.05); }
-  .pill:hover { background: rgb(var(--fg) / 0.09); }
+  .pill { @apply rounded-full px-4 py-2 text-sm font-medium transition; background: color-mix(in srgb, rgb(var(--fg)) 5%, rgb(var(--ink))); }
+  .pill:hover { background: color-mix(in srgb, rgb(var(--fg)) 9%, rgb(var(--ink))); }
   .pill-on { @apply text-ongold; background: rgb(var(--gold)) !important; }
 
   .gold-text { background: linear-gradient(180deg, #f3dfa9, #c99d4a); -webkit-background-clip: text; background-clip: text; color: transparent; }

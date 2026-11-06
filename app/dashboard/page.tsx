@@ -72,7 +72,7 @@ export default async function Bookings({
           <div className="text-lg font-semibold">Klart! 🎉 Du är bokningsbar.</div>
           <p className="mt-1 text-sm text-mute">Lägg länken i Instagram-bion och lägg till bilder under Team och Salong.</p>
           <div className="mt-3 flex items-center gap-2">
-            <code className="flex-1 truncate rounded-full px-4 py-2.5 text-sm" style={{ background: 'rgb(var(--fg) / .05)' }}>{link}</code>
+            <code className="flex-1 truncate rounded-full px-4 py-2.5 text-sm" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 5%, rgb(var(--ink)))' }}>{link}</code>
             <CopyButton text={link} />
           </div>
         </div>
@@ -105,7 +105,7 @@ export default async function Bookings({
                 key={d}
                 href={d === today ? '/dashboard' : `/dashboard?d=${d}`}
                 className={`relative flex h-[74px] w-[54px] shrink-0 flex-col items-center justify-center rounded-[22px] transition ${on ? 'bg-gold text-ongold' : 'hover:bg-fg/[0.08]'}`}
-                style={on ? undefined : { background: 'rgb(var(--fg) / .045)' }}
+                style={on ? undefined : { background: 'color-mix(in srgb, rgb(var(--fg)) 4.5%, rgb(var(--ink)))' }}
               >
                 <span className={`text-[11px] font-medium uppercase ${on ? '' : 'text-mute'}`}>{WEEKDAYS[weekdayOf(d)]}</span>
                 <span className="text-lg font-bold">{Number(d.slice(8))}</span>
@@ -137,7 +137,7 @@ export default async function Bookings({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 truncate font-semibold">
                       {r.customer_name}
-                      {r.source === 'manual' && <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-mute" style={{ background: 'rgb(var(--fg) / .07)' }}>DM</span>}
+                      {r.source === 'manual' && <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-mute" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 7%, rgb(var(--ink)))' }}>DM</span>}
                     </div>
                     <div className="truncate text-sm text-mute">
                       {r.service_name}

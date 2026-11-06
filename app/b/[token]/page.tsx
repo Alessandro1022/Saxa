@@ -60,16 +60,16 @@ export default async function BookingPage({ params }: { params: Promise<{ token:
           {b.price_sek != null && <div className="font-bold text-gold">{b.price_sek} kr</div>}
         </div>
         <div className="mt-5 grid grid-cols-2 gap-2">
-          <div className="rounded-[20px] p-3.5" style={{ background: 'rgb(var(--fg) / .045)' }}>
+          <div className="rounded-[20px] p-3.5" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4.5%, rgb(var(--ink)))' }}>
             <div className="text-xs text-mute">Datum</div>
             <div className="font-semibold">{prettyDate(date)}</div>
           </div>
-          <div className="rounded-[20px] p-3.5" style={{ background: 'rgb(var(--fg) / .045)' }}>
+          <div className="rounded-[20px] p-3.5" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4.5%, rgb(var(--ink)))' }}>
             <div className="text-xs text-mute">Tid</div>
             <div className="font-semibold">{fmtTz(b.starts_at, salon.timezone, 'HH:mm')}–{fmtTz(b.ends_at, salon.timezone, 'HH:mm')}</div>
           </div>
         </div>
-        <div className="mt-2 rounded-[20px] p-3.5" style={{ background: 'rgb(var(--fg) / .045)' }}>
+        <div className="mt-2 rounded-[20px] p-3.5" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4.5%, rgb(var(--ink)))' }}>
           <div className="text-xs text-mute">Salong</div>
           <div className="font-semibold">{salon.name}</div>
           {salon.address && <div className="text-sm text-mute">{salon.address}</div>}

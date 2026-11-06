@@ -8,7 +8,7 @@ export default function ReviewForm({ bookingId }: { bookingId: string }) {
   const [rating, setRating] = useState(0)
   const [hover, setHover] = useState(0)
   return (
-    <form action={addReview} className="mt-3 rounded-[20px] p-3" style={{ background: 'rgb(var(--fg) / .04)' }}>
+    <form action={addReview} className="mt-3 rounded-[20px] p-3" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4%, rgb(var(--ink)))' }}>
       <input type="hidden" name="booking_id" value={bookingId} />
       <input type="hidden" name="rating" value={rating} />
       <div className="flex items-center justify-between">

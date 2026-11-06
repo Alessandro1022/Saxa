@@ -76,7 +76,7 @@ function LoginInner() {
         <h1 className="mt-6 text-3xl font-bold tracking-tight">{mode === 'in' ? 'Välkommen tillbaka' : 'Skapa konto'}</h1>
         <p className="mt-1.5 text-mute">{as === 'salon' ? 'För salonger och frisörer.' : 'Se och hantera alla dina bokningar.'}</p>
 
-        <div className="mt-7 grid grid-cols-2 rounded-full p-1" style={{ background: 'rgb(var(--fg) / .05)' }}>
+        <div className="mt-7 grid grid-cols-2 rounded-full p-1" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 5%, rgb(var(--ink)))' }}>
           {(
             [
               ['customer', 'Kund'],

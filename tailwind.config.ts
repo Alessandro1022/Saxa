@@ -12,7 +12,7 @@ export default {
         mute: v('mute'),
         fg: v('fg'),
         ongold: '#141109',
-        gold: { DEFAULT: v('gold'), soft: 'rgb(var(--gold) / 0.12)' },
+        gold: { DEFAULT: v('gold'), soft: 'color-mix(in srgb, rgb(var(--gold)) 13%, rgb(var(--ink)))' },
       },
       fontFamily: { sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'] },
     },

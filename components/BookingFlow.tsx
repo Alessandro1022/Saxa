@@ -106,7 +106,7 @@ export default function BookingFlow({
       </div>
       <div className="mt-4 grid grid-cols-4 gap-1.5">
         {STEPS.map((s, i) => (
-          <div key={s} className="h-1 overflow-hidden rounded-full" style={{ background: 'rgb(var(--fg) / .08)' }}>
+          <div key={s} className="h-1 overflow-hidden rounded-full" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 8%, rgb(var(--ink)))' }}>
             <div className="h-full rounded-full bg-gold transition-all duration-500" style={{ width: step > i ? '100%' : '0%' }} />
           </div>
         ))}
@@ -171,7 +171,7 @@ export default function BookingFlow({
                     key={d}
                     onClick={() => { setDate(d); setTime('') }}
                     className={`flex h-[78px] w-[58px] shrink-0 flex-col items-center justify-center rounded-[22px] transition duration-300 ${on ? 'bg-gold text-ongold shadow-[0_10px_24px_-10px_rgb(210_171_92/.9)]' : 'hover:bg-fg/[0.08]'}`}
-                    style={on ? undefined : { background: 'rgb(var(--fg) / .045)' }}
+                    style={on ? undefined : { background: 'color-mix(in srgb, rgb(var(--fg)) 4.5%, rgb(var(--ink)))' }}
                   >
                     <span className={`text-[11px] font-medium uppercase ${on ? '' : 'text-mute'}`}>{d === today ? 'Idag' : WEEKDAYS[weekdayOf(d)]}</span>
                     <span className="text-xl font-bold">{Number(d.slice(8))}</span>
@@ -183,11 +183,11 @@ export default function BookingFlow({
               {slots === null ? (
                 <div className="grid grid-cols-4 gap-2">
                   {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="h-12 animate-pulse rounded-full" style={{ background: 'rgb(var(--fg) / .05)' }} />
+                    <div key={i} className="h-12 animate-pulse rounded-full" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 5%, rgb(var(--ink)))' }} />
                   ))}
                 </div>
               ) : slots.length === 0 ? (
-                <div className="rounded-[24px] px-6 py-10 text-center" style={{ background: 'rgb(var(--fg) / .04)' }}>
+                <div className="rounded-[24px] px-6 py-10 text-center" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4%, rgb(var(--ink)))' }}>
                   <p className="font-medium">Fullbokat den här dagen</p>
                   <p className="text-sm text-mute">Svep och testa en annan dag.</p>
                 </div>
@@ -198,7 +198,7 @@ export default function BookingFlow({
                       key={s.time}
                       onClick={() => { setTime(s.time); go(4) }}
                       className={`h-12 rounded-full text-[15px] font-semibold transition duration-200 active:scale-95 ${time === s.time ? 'bg-gold text-ongold' : 'hover:bg-fg/[0.1]'}`}
-                      style={time === s.time ? undefined : { background: 'rgb(var(--fg) / .05)' }}
+                      style={time === s.time ? undefined : { background: 'color-mix(in srgb, rgb(var(--fg)) 5%, rgb(var(--ink)))' }}
                     >
                       {s.time}
                     </button>

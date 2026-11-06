@@ -38,7 +38,7 @@ export default function ImageUpload({
   return (
     <label
       className={`group relative block shrink-0 cursor-pointer overflow-hidden ${box}`}
-      style={{ ...(shape === 'round' ? { width: size, height: size } : {}), background: 'rgb(var(--fg) / .06)' }}
+      style={{ ...(shape === 'round' ? { width: size, height: size } : {}), background: 'color-mix(in srgb, rgb(var(--fg)) 6%, rgb(var(--ink)))' }}
     >
       <input type="hidden" name={name} value={url} />
       <input type="file" accept="image/*" className="hidden" onChange={onFile} />

@@ -57,7 +57,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
             <div key={s.id} className="card rise overflow-hidden p-5" style={{ animationDelay: `${i * 0.04}s` }}>
               <StaffForm s={s} salonId={salon.id} />
 
-              <details className="mt-4 rounded-[22px]" style={{ background: 'rgb(var(--fg) / .04)' }}>
+              <details className="mt-4 rounded-[22px]" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4%, rgb(var(--ink)))' }}>
                 <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5">
                   <Clock size={17} className="text-gold" />
                   <span className="flex-1 text-sm font-medium">Arbetstider</span>
@@ -71,7 +71,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
                       <div key={d} className="flex items-center gap-2">
                         <label className="relative">
                           <input type="checkbox" name={`open_${d}`} defaultChecked={!!row} className="peer sr-only" />
-                          <span className="flex h-11 w-14 cursor-pointer items-center justify-center rounded-full text-sm font-semibold text-mute transition peer-checked:bg-gold peer-checked:text-ongold" style={{ background: 'rgb(var(--fg) / .06)' }}>
+                          <span className="flex h-11 w-14 cursor-pointer items-center justify-center rounded-full text-sm font-semibold text-mute transition peer-checked:bg-gold peer-checked:text-ongold" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 6%, rgb(var(--ink)))' }}>
                             {WEEKDAYS[d]}
                           </span>
                         </label>
@@ -85,7 +85,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
                 </form>
               </details>
 
-              <details className="mt-2 rounded-[22px]" style={{ background: 'rgb(var(--fg) / .04)' }}>
+              <details className="mt-2 rounded-[22px]" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4%, rgb(var(--ink)))' }}>
                 <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3.5">
                   <CalendarSync size={17} className="text-gold" />
                   <span className="flex-1 text-sm font-medium">Koppla till min kalender</span>
@@ -96,7 +96,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
                     <a href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`} target="_blank" rel="noreferrer" className="btn-soft !py-3 text-sm">Google</a>
                   </div>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 truncate rounded-full px-4 py-2.5 text-xs text-mute" style={{ background: 'rgb(var(--fg) / .05)' }}>{https}</code>
+                    <code className="flex-1 truncate rounded-full px-4 py-2.5 text-xs text-mute" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 5%, rgb(var(--ink)))' }}>{https}</code>
                     <CopyButton text={https} />
                   </div>
                   <p className="text-xs text-mute">Öppna på telefonen. Bokningar dyker upp automatiskt (Apple ca 15 min, Google några timmar). Dela inte länken.</p>

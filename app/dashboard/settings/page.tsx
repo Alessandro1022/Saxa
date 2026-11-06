@@ -29,7 +29,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
       <div className="card rise mb-4 p-5">
         <div className="label">Din bokningslänk</div>
         <div className="flex items-center gap-2">
-          <code className="flex-1 truncate rounded-full px-4 py-2.5 text-sm" style={{ background: 'rgb(var(--fg) / .05)' }}>{link}</code>
+          <code className="flex-1 truncate rounded-full px-4 py-2.5 text-sm" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 5%, rgb(var(--ink)))' }}>{link}</code>
           <CopyButton text={link} />
         </div>
         <p className="mt-2 text-xs text-mute">Lägg den i Instagram-bion, på Google-profilen och skicka den i DM.</p>

@@ -24,7 +24,7 @@ export function Avatar({ name, src, size = 48, className = '' }: { name: string;
   return (
     <div
       className={`shrink-0 overflow-hidden rounded-full ${className}`}
-      style={{ width: size, height: size, background: 'linear-gradient(135deg, rgb(var(--gold) / .4), rgb(var(--gold) / .1))' }}
+      style={{ width: size, height: size, background: 'linear-gradient(135deg, rgb(var(--gold) / .4), rgb(var(--gold) / .1)), rgb(var(--card))' }}
     >
       {src && !bad ? (
         // eslint-disable-next-line @next/next/no-img-element

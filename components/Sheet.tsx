@@ -27,7 +27,7 @@ export default function Sheet({ title, children, defaultOpen = false }: { title:
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
           <div className="fade absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="sheet relative max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-[32px] bg-ink p-5 pb-[max(env(safe-area-inset-bottom),20px)] sm:rounded-[32px]" style={{ border: '1px solid rgb(var(--line) / var(--line-a))' }}>
-            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full sm:hidden" style={{ background: 'rgb(var(--fg) / .15)' }} />
+            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full sm:hidden" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 15%, rgb(var(--ink)))' }} />
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">{title}</h2>
               <button onClick={() => setOpen(false)} className="icon-btn" aria-label="Stäng"><X size={18} /></button>

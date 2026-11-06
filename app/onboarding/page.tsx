@@ -59,7 +59,7 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
       <div className="mt-6"><Flash e={e} /></div>
       <form action={createSalon} className="rise rise-1 grid gap-3">
         <input className="input" name="name" required placeholder="Salongens namn, t.ex. Ali's Barbershop" />
-        <div className="flex items-center rounded-2xl pl-4" style={{ background: 'rgb(var(--fg) / .045)' }}>
+        <div className="flex items-center rounded-2xl pl-4" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4.5%, rgb(var(--ink)))' }}>
           <span className="text-sm text-mute">saxa.se/</span>
           <input className="w-full bg-transparent px-1 py-3.5 text-[15px] outline-none placeholder:text-mute" name="slug" placeholder="din-salong (valfritt)" />
         </div>

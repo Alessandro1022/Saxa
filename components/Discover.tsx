@@ -57,7 +57,7 @@ export default function Discover({ salons, pros }: { salons: SalonCard[]; pros: 
       </div>
 
       <div className="rise rise-3 mt-5 flex items-center gap-2">
-        <div className="flex rounded-full p-1" style={{ background: 'rgb(var(--fg) / .05)' }}>
+        <div className="flex rounded-full p-1" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 5%, rgb(var(--ink)))' }}>
           {(
             [
               ['salons', `Salonger · ${s.length}`],
