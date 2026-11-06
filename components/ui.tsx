@@ -15,18 +15,15 @@ export function Rating({ avg, n, className = '' }: { avg?: number | null; n?: nu
 
 export function Logo({ size = 40 }: { size?: number }) {
   return (
-    <div
-      className="flex items-center justify-center rounded-[30%] font-black text-ongold"
-      style={{
-        width: size,
-        height: size,
-        fontSize: size * 0.45,
-        background: 'linear-gradient(160deg, #f3dfa9, #c99d4a)',
-        boxShadow: '0 10px 24px -10px rgb(210 171 92 / .8)',
-      }}
-    >
-      S
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/logo.svg"
+      alt="Saxa"
+      width={size}
+      height={size}
+      className="shrink-0 rounded-[22%]"
+      style={{ boxShadow: '0 10px 24px -12px rgb(0 0 0 / .6)' }}
+    />
   )
 }
 
