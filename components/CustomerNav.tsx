@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, Compass, UserRound } from 'lucide-react'
+import { CalendarDays, Home, Search, UserRound } from 'lucide-react'
 
 const TABS = [
-  { href: '/', label: 'Utforska', Icon: Compass },
+  { href: '/', label: 'Hem', Icon: Home },
+  { href: '/frisorer', label: 'Hitta', Icon: Search },
   { href: '/me', label: 'Bokningar', Icon: CalendarDays },
   { href: '/me/profil', label: 'Profil', Icon: UserRound },
 ]
@@ -21,9 +22,7 @@ export default function CustomerNav() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition duration-300 ${
-                on ? 'bg-gold text-ongold' : 'text-mute hover:text-fg'
-              }`}
+              className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition duration-300 ${on ? 'bg-gold text-ongold' : 'text-mute hover:text-fg'}`}
             >
               <Icon size={18} strokeWidth={on ? 2.4 : 2} />
               <span className={on ? '' : 'hidden sm:inline'}>{label}</span>

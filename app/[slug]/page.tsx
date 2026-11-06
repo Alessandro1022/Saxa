@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { ArrowLeft, MapPin, Phone, Scissors, Star } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, Star } from 'lucide-react'
 import { admin } from '@/lib/supabase/admin'
 import { getMe } from '@/lib/user'
 import BookingFlow from '@/components/BookingFlow'
 import ThemeToggle from '@/components/ThemeToggle'
 import { Avatar, Rating } from '@/components/ui'
+import { Cover } from '@/components/Img'
 import { MONTHS } from '@/lib/time'
 
 export const dynamic = 'force-dynamic'
@@ -26,9 +27,9 @@ async function load(slug: string) {
     db.from('services').select('id, name, description, duration_min, price_sek').eq('salon_id', salon.id).eq('active', true).order('sort'),
     db.from('salon_rating').select('*').eq('salon_id', salon.id).maybeSingle(),
     db.from('staff_rating').select('*'),
-    db.from('reviews').select('id, rating, comment, created_at, customer_id, staff_id').eq('salon_id', salon.id).order('created_at', { ascending: false }).limit(12),
+    db.from('reviews').select('id, rating, comment, created_at, customer_id, staff_id, author_name').eq('salon_id', salon.id).order('created_at', { ascending: false }).limit(12),
   ])
-  const ids = [...new Set((reviews ?? []).map((r) => r.customer_id as string))]
+  const ids = [...new Set((reviews ?? []).map((r) => r.customer_id as string | null).filter((x): x is string => !!x))]
   const { data: people } = ids.length
     ? await db.from('customers').select('id, full_name, avatar_url').in('id', ids)
     : { data: [] as { id: string; full_name: string | null; avatar_url: string | null }[] }
@@ -62,17 +63,10 @@ export default async function SalonPage({
   return (
     <main className="mx-auto max-w-2xl pb-44">
       <header className="relative h-[300px] overflow-hidden sm:mt-4 sm:rounded-[36px]">
-        {salon.cover_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={salon.cover_url} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full items-center justify-center" style={{ background: 'radial-gradient(circle at 30% 10%, rgb(var(--gold) / .45), rgb(var(--card)) 70%)' }}>
-            <Scissors size={56} className="text-gold/50" />
-          </div>
-        )}
+        <Cover src={salon.cover_url} icon={56} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[rgb(var(--ink))]" />
         <div className="absolute inset-x-5 top-[max(env(safe-area-inset-top),16px)] flex justify-between">
-          <Link href="/" className="icon-btn !bg-black/30 text-white backdrop-blur-md" aria-label="Tillbaka"><ArrowLeft size={18} /></Link>
+          <Link href="/frisorer" className="icon-btn !bg-black/30 text-white backdrop-blur-md" aria-label="Tillbaka"><ArrowLeft size={18} /></Link>
           <ThemeToggle className="!bg-black/30 text-white backdrop-blur-md" />
         </div>
       </header>
@@ -138,7 +132,7 @@ export default async function SalonPage({
           <div className="no-scrollbar -mx-5 mt-3 flex gap-3 overflow-x-auto px-5">
             {reviews.map((r) => {
               const d = new Date(r.created_at)
-              const who = r.who?.full_name?.split(' ')[0] ?? 'Kund'
+              const who = r.author_name ?? r.who?.full_name?.split(' ')[0] ?? 'Kund'
               return (
                 <div key={r.id} className="card w-[260px] shrink-0 p-4">
                   <div className="flex items-center gap-2.5">

@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 }
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' }
 
-// Sätter temat innan sidan ritas – ingen blink
-const themeScript = `try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch(e){}`
+// Följer mobilens ljus/mörk-inställning tills man väljer själv. Ingen blink.
+const themeScript = `try{var t=localStorage.getItem('theme');if(t==='light'||(!t&&matchMedia('(prefers-color-scheme: light)').matches))document.documentElement.classList.add('light')}catch(e){}`
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -13,11 +13,11 @@ export default async function Settings({ searchParams }: { searchParams: Promise
   const db = admin()
   const { data: reviews } = await db
     .from('reviews')
-    .select('id, rating, comment, customer_id, created_at')
+    .select('id, rating, comment, customer_id, created_at, author_name')
     .eq('salon_id', salon.id)
     .order('created_at', { ascending: false })
     .limit(20)
-  const ids = [...new Set((reviews ?? []).map((r) => r.customer_id as string))]
+  const ids = [...new Set((reviews ?? []).map((r) => r.customer_id as string | null).filter((x): x is string => !!x))]
   const { data: people } = ids.length ? await db.from('customers').select('id, full_name, avatar_url').in('id', ids) : { data: [] }
   const avg = reviews?.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : null
 
@@ -88,7 +88,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
           <div className="card divide-hair overflow-hidden">
             {reviews.map((r) => {
               const p = (people ?? []).find((x) => x.id === r.customer_id)
-              const who = p?.full_name?.split(' ')[0] ?? 'Kund'
+              const who = r.author_name ?? p?.full_name?.split(' ')[0] ?? 'Kund'
               return (
                 <div key={r.id} className="flex gap-3 px-4 py-3.5">
                   <Avatar name={who} src={p?.avatar_url} size={36} />

@@ -221,12 +221,12 @@ export default function BookingFlow({
             </div>
             <input className="input" required placeholder="Namn" autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <input className="input" required type="tel" inputMode="tel" placeholder="Telefon" autoComplete="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            <input className="input" type="email" placeholder="E-post (valfritt)" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <input className="input" type="email" required={!me} placeholder={me ? 'E-post' : 'E-post (för bekräftelse)'} autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             <textarea className="input min-h-[84px] resize-none" placeholder="Önskemål (valfritt)" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
             <button className="btn-gold mt-1 !py-4 text-base" disabled={busy}>{busy ? 'Bokar…' : 'Bekräfta bokning'}</button>
             {!me && (
               <p className="text-center text-sm text-mute">
-                <Link href="/login" className="font-medium text-gold">Logga in</Link> för att spara dina bokningar
+                Inget konto behövs. <Link href="/login" className="font-medium text-gold">Logga in</Link> om du vill spara dina bokningar
               </p>
             )}
           </form>

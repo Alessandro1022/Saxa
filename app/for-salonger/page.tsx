@@ -30,7 +30,7 @@ export default function ForSalons() {
         <p className="mt-4 max-w-md text-lg text-mute">Fyll stolen, slipp DM-kaoset och se hela dagen i telefonen.</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/login?as=salon&mode=up" className="btn-gold">Skapa salong gratis</Link>
-          <Link href="/demo" className="btn-soft">Se demo</Link>
+          <Link href="/fade-lab" className="btn-soft">Se demo</Link>
         </div>
       </section>
 

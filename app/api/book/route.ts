@@ -18,6 +18,13 @@ export async function POST(req: Request) {
   if (!salonId || !serviceId || !staffId || !isDate(date) || !isTime(time))
     return NextResponse.json({ error: 'Välj tjänst, frisör och tid' }, { status: 400 })
 
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+    return NextResponse.json({ error: 'Fyll i din e-post' }, { status: 400 })
+
   const av = await getAvailability(salonId, serviceId, staffId, date)
   const slot = av?.slots.find((s) => s.time === time)
   if (!av || !slot) return NextResponse.json({ error: 'Tiden är tyvärr inte ledig längre. Välj en annan.' }, { status: 409 })
@@ -27,11 +34,6 @@ export async function POST(req: Request) {
 
   const start = zoned(date, time, av.salon.timezone as string)
   const end = new Date(start.getTime() + (av.service.duration_min as number) * 60000)
-
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
 
   const { data, error } = await admin()
     .from('bookings')

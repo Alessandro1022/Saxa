@@ -8,6 +8,7 @@ import CustomerNav from '@/components/CustomerNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import ReviewForm from '@/components/ReviewForm'
 import { Avatar } from '@/components/ui'
+import { Cover } from '@/components/Img'
 import { cancelMyBooking } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -57,7 +58,7 @@ export default async function MyBookings() {
           <div className="card rise px-6 py-10 text-center">
             <Scissors className="mx-auto text-gold" />
             <p className="mt-3 font-medium">Inga kommande bokningar</p>
-            <Link href="/" className="btn-gold mt-5 !py-3">Hitta en frisör</Link>
+            <Link href="/frisorer" className="btn-gold mt-5 !py-3">Hitta en frisör</Link>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -67,12 +68,7 @@ export default async function MyBookings() {
               return (
                 <div key={b.id} className="card rise overflow-hidden" style={{ animationDelay: `${i * 0.05}s` }}>
                   <div className="relative h-28">
-                    {b.salons.cover_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={b.salons.cover_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full" style={{ background: 'radial-gradient(circle at 20% 0%, rgb(var(--gold) / .4), rgb(var(--card)) 70%)' }} />
-                    )}
+                    <Cover src={b.salons.cover_url} icon={28} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between text-white">
                       <div>

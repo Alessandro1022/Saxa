@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { ChevronRight, MapPin, Search, Scissors } from 'lucide-react'
 import { Avatar, Rating } from './ui'
+import { Cover } from './Img'
 
 export type SalonCard = {
   id: string
@@ -90,17 +91,7 @@ export default function Discover({ salons, pros }: { salons: SalonCard[]; pros: 
               {s.map((x, i) => (
                 <Link key={x.id} href={`/${x.slug}`} className="rise group block" style={{ animationDelay: `${0.04 * i + 0.15}s` }}>
                   <div className="relative h-44 overflow-hidden rounded-[28px]">
-                    {x.cover_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={x.cover_url} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-                    ) : (
-                      <div
-                        className="flex h-full items-center justify-center"
-                        style={{ background: 'radial-gradient(circle at 30% 20%, rgb(var(--gold) / .35), rgb(var(--card)) 70%)' }}
-                      >
-                        <Scissors className="text-gold/60" size={40} />
-                      </div>
-                    )}
+                    <Cover src={x.cover_url} className="transition duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
                     {x.from != null && (
                       <span className="absolute right-3 top-3 rounded-full bg-black/45 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">

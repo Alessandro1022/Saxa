@@ -18,7 +18,7 @@ Next.js 15 + Supabase + Tailwind. Mobil-först, mörkt tema med guld.
 - **Dubbelbokningsskydd i databasen** – två kunder kan inte få samma tid
 
 ## Kom igång (ca 10 min)
-1. **Supabase** → nytt projekt → SQL Editor → kör `supabase/schema.sql` och sedan `supabase/002_upgrade.sql`.
+1. **Supabase** → nytt projekt → SQL Editor → kör i ordning: `supabase/schema.sql`, `supabase/002_upgrade.sql`, `supabase/003_demo.sql` (10 demosalonger).
    (Valfritt: kör `supabase/seed-demo.sql` för en demosalong på `/demo`.)
 2. Supabase → Authentication → URL Configuration:
    - Site URL: `https://din-domän.vercel.app`

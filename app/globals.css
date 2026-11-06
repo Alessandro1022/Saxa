@@ -13,7 +13,7 @@
   --fg: 245 245 247;
   --gold: 222 190 120;
   --grid: 255 255 255;
-  --grid-a: 0.06;
+  --grid-a: 0.055;
   --shadow: 0 0 0;
 }
 /* Ljust */
@@ -27,28 +27,36 @@
   --fg: 18 18 22;
   --gold: 176 136 56;
   --grid: 0 0 0;
-  --grid-a: 0.055;
+  --grid-a: 0.075;
   --shadow: 60 50 30;
 }
 
-html, body { background: rgb(var(--ink)); color: rgb(var(--fg)); -webkit-tap-highlight-color: transparent; }
+html { background: rgb(var(--ink)); }
+body { background: transparent; color: rgb(var(--fg)); -webkit-tap-highlight-color: transparent; }
 body { min-height: 100dvh; position: relative; transition: background-color .3s, color .3s; }
 
-/* Rutnät + guldglöd */
+/* Rutnät (som Tekton) + guldglöd */
 body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgb(var(--grid) / var(--grid-a)) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--grid) / var(--grid-a)) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
+}
+body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image:
-    radial-gradient(50rem 28rem at 15% -10%, rgb(var(--gold) / 0.16), transparent 65%),
-    radial-gradient(40rem 24rem at 100% 10%, rgb(var(--gold) / 0.07), transparent 60%),
-    linear-gradient(rgb(var(--grid) / var(--grid-a)) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--grid) / var(--grid-a)) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
-  -webkit-mask-image: radial-gradient(ellipse 100% 80% at 50% 0%, #000 35%, transparent 100%);
-  mask-image: radial-gradient(ellipse 100% 80% at 50% 0%, #000 35%, transparent 100%);
+  background:
+    radial-gradient(48rem 26rem at 10% -8%, rgb(var(--gold) / 0.16), transparent 65%),
+    radial-gradient(40rem 26rem at 105% 15%, rgb(var(--gold) / 0.08), transparent 60%);
 }
 
 @layer components {
@@ -105,3 +113,8 @@ body::before {
 @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
 .fade { animation: fade .3s ease both; }
 :root.light .gold-text { background-image: linear-gradient(180deg, #c99a3e, #8a6420); }
+
+@keyframes float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-14px) } }
+.float { animation: float 6s ease-in-out infinite; }
+.float-slow { animation: float 8s ease-in-out infinite; animation-delay: -2s; }
+@media (prefers-reduced-motion: reduce) { .float, .float-slow, .rise, .sheet { animation: none !important; } }

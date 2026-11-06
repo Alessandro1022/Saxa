@@ -1,32 +1,6 @@
 import { Star } from 'lucide-react'
 
-export function Avatar({
-  name,
-  src,
-  size = 48,
-  className = '',
-}: {
-  name: string
-  src?: string | null
-  size?: number
-  className?: string
-}) {
-  return (
-    <div
-      className={`shrink-0 overflow-hidden rounded-full ${className}`}
-      style={{ width: size, height: size, background: 'linear-gradient(135deg, rgb(var(--gold) / .35), rgb(var(--gold) / .08))' }}
-    >
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <div className="flex h-full items-center justify-center font-semibold text-gold" style={{ fontSize: size * 0.38 }}>
-          {(name?.trim()?.[0] ?? '?').toUpperCase()}
-        </div>
-      )}
-    </div>
-  )
-}
+export { Avatar } from './Img'
 
 export function Rating({ avg, n, className = '' }: { avg?: number | null; n?: number | null; className?: string }) {
   if (!n) return <span className={`text-xs text-mute ${className}`}>Ny</span>

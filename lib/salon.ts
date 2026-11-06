@@ -36,7 +36,7 @@ export async function origin() {
   return `${proto}://${host}`
 }
 
-export const RESERVED = ['login', 'dashboard', 'onboarding', 'api', 'auth', 'b', 'admin', 'app', 'www', 'me', 'for-salonger']
+export const RESERVED = ['login', 'dashboard', 'onboarding', 'api', 'auth', 'b', 'admin', 'app', 'www', 'me', 'for-salonger', 'frisorer']
 
 export function slugify(s: string) {
   return s
