@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react'
+import SubmitButton from '@/components/SubmitButton'
 import { requireSalon, origin } from '@/lib/salon'
 import { admin } from '@/lib/supabase/admin'
 import { saveSalon } from '../actions'
@@ -76,7 +77,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
             <input className="input" name="instagram" defaultValue={salon.instagram ?? ''} placeholder="dittkonto" />
           </div>
         </div>
-        <button className="btn-gold">Spara</button>
+        <SubmitButton pending="Sparar…">Spara</SubmitButton>
       </form>
 
       <section className="mt-8">

@@ -1,4 +1,5 @@
 import { Clock, Trash2 } from 'lucide-react'
+import SubmitButton from '@/components/SubmitButton'
 import { requireSalon } from '@/lib/salon'
 import { saveService, deleteService } from '../actions'
 import { Flash } from '@/components/ui'
@@ -24,7 +25,7 @@ function ServiceForm({ s, nextSort }: { s?: Svc; nextSort: number }) {
       <label className="flex items-center gap-2.5 text-sm">
         <input type="checkbox" name="active" defaultChecked={s?.active ?? true} className="h-5 w-5 accent-[#d2ab5c]" /> Bokningsbar
       </label>
-      <button className="btn-gold !py-3">{s ? 'Spara' : 'Lägg till'}</button>
+      <SubmitButton className="btn-gold !py-3" pending="Sparar…">{s ? 'Spara' : 'Lägg till'}</SubmitButton>
     </form>
   )
 }

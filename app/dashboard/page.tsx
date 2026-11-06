@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import SubmitButton from '@/components/SubmitButton'
 import { Phone, X } from 'lucide-react'
 import { requireSalon, origin } from '@/lib/salon'
 import { addDays, fmtTz, isDate, MONTHS, todayIn, WEEKDAYS, weekdayOf, zoned } from '@/lib/time'
@@ -188,7 +189,7 @@ export default async function Bookings({
             <input className="input" type="time" name="time" step={300} required />
           </div>
           <input className="input col-span-2" name="note" placeholder="Anteckning (valfritt)" />
-          <button className="btn-gold col-span-2 mt-1">Spara bokning</button>
+          <SubmitButton className="btn-gold col-span-2 mt-1" pending="Sparar…">Spara bokning</SubmitButton>
         </form>
       </Sheet>
     </div>

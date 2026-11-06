@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { RESERVED, slugify } from '@/lib/salon'
 import { Flash, Logo } from '@/components/ui'
+import SubmitButton from '@/components/SubmitButton'
 
 async function createSalon(formData: FormData) {
   'use server'
@@ -17,13 +18,18 @@ async function createSalon(formData: FormData) {
   if (!name) redirect('/onboarding?e=' + encodeURIComponent('Skriv salongens namn'))
   if (slug.length < 3 || RESERVED.includes(slug)) redirect('/onboarding?e=' + encodeURIComponent('Välj en annan länk'))
 
-  const { data: salon, error } = await supabase
-    .from('salons')
-    .insert({ name, slug, owner_id: user.id, city: String(formData.get('city') ?? '').trim() || null })
-    .select('id')
-    .single()
-  if (error || !salon)
-    redirect('/onboarding?e=' + encodeURIComponent(error?.code === '23505' ? 'Länken är redan tagen' : 'Något gick fel'))
+  const city = String(formData.get('city') ?? '').trim() || null
+  let { data: salon, error } = await supabase.from('salons').insert({ name, slug, owner_id: user.id, city }).select('id').single()
+  // Om 002_upgrade.sql inte körts finns inte kolumnen city – försök igen utan
+  if (error?.code === '42703' || error?.code === 'PGRST204')
+    ({ data: salon, error } = await supabase.from('salons').insert({ name, slug, owner_id: user.id }).select('id').single())
+  if (error || !salon) {
+    console.error('createSalon', error)
+    redirect(
+      '/onboarding?e=' +
+        encodeURIComponent(error?.code === '23505' ? 'Länken är redan tagen – välj en annan' : `Kunde inte skapa salongen: ${error?.message ?? 'okänt fel'}`)
+    )
+  }
 
   // Bra startvärden så salongen är bokningsbar direkt
   const { data: me } = await supabase.from('staff').insert({ salon_id: salon.id, name: you }).select('id').single()
@@ -65,7 +71,7 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
         </div>
         <input className="input" name="city" placeholder="Stad, t.ex. Göteborg" />
         <input className="input" name="you" placeholder="Ditt namn (visas för kunder)" />
-        <button className="btn-gold mt-2">Skapa salong</button>
+        <SubmitButton className="btn-gold mt-2" pending="Skapar salong…">Skapa salong</SubmitButton>
       </form>
     </main>
   )

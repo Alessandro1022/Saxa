@@ -1,4 +1,5 @@
 import { CalendarSync, Clock, Trash2 } from 'lucide-react'
+import SubmitButton from '@/components/SubmitButton'
 import { requireSalon, origin } from '@/lib/salon'
 import { saveStaff, deleteStaff, saveHours } from '../actions'
 import { WEEKDAYS, WEEK_ORDER } from '@/lib/time'
@@ -26,7 +27,7 @@ function StaffForm({ s, salonId }: { s?: Staff; salonId: string }) {
         <label className="flex items-center gap-2.5 text-sm">
           <input type="checkbox" name="active" defaultChecked={s?.active ?? true} className="h-5 w-5 accent-[#d2ab5c]" /> Tar bokningar
         </label>
-        <button className="btn-gold !py-3">{s ? 'Spara' : 'Lägg till'}</button>
+        <SubmitButton className="btn-gold !py-3" pending="Sparar…">{s ? 'Spara' : 'Lägg till'}</SubmitButton>
       </div>
     </form>
   )
@@ -81,7 +82,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
                       </div>
                     )
                   })}
-                  <button className="btn-gold mt-2 !py-3">Spara tider</button>
+                  <SubmitButton className="btn-gold mt-2 !py-3" pending="Sparar…">Spara tider</SubmitButton>
                 </form>
               </details>
 

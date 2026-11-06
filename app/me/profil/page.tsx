@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import SubmitButton from '@/components/SubmitButton'
 import { redirect } from 'next/navigation'
 import { ChevronRight, LogOut, Store } from 'lucide-react'
 import { getMe } from '@/lib/user'
@@ -44,7 +45,7 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
           <input className="input" name="phone" type="tel" defaultValue={me.phone ?? ''} autoComplete="tel" />
           <p className="mt-1.5 text-xs text-mute">Fylls i automatiskt när du bokar.</p>
         </div>
-        <button className="btn-gold">Spara</button>
+        <SubmitButton>Spara</SubmitButton>
       </form>
 
       <div className="card rise rise-2 mt-4 overflow-hidden">
