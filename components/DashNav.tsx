@@ -22,7 +22,7 @@ export default function DashNav() {
               key={t.href}
               href={t.href}
               className={`flex flex-col items-center gap-0.5 py-2.5 text-[11px] md:flex-row md:gap-2 md:rounded-2xl md:px-4 md:py-2 md:text-sm ${
-                on ? 'text-gold md:bg-gold-soft' : 'text-mute hover:text-white'
+                on ? 'text-gold md:bg-gold-soft' : 'text-mute hover:text-fg'
               }`}
             >
               <span className="text-lg md:text-base">{t.icon}</span>

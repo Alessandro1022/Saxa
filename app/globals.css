@@ -2,16 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-html, body { background: #0a0a0b; color: #f4f4f5; -webkit-tap-highlight-color: transparent; }
-body { background-image: radial-gradient(60rem 30rem at 50% -10%, #d6b46a14, transparent 70%); min-height: 100dvh; }
+/* Mörkt (standard) */
+:root {
+  color-scheme: dark;
+  --ink: 10 10 11;
+  --card: 20 20 22;
+  --line: 38 38 42;
+  --mute: 139 139 147;
+  --fg: 244 244 245;
+  --gold: 214 180 106;
+  --grid: 255 255 255;
+  --grid-a: 0.07;
+}
+/* Ljust */
+:root.light {
+  color-scheme: light;
+  --ink: 248 248 245;
+  --card: 255 255 255;
+  --line: 226 226 229;
+  --mute: 110 110 120;
+  --fg: 20 20 23;
+  --gold: 184 145 63;
+  --grid: 0 0 0;
+  --grid-a: 0.08;
+}
+
+html, body { background: rgb(var(--ink)); color: rgb(var(--fg)); -webkit-tap-highlight-color: transparent; }
+body { min-height: 100dvh; position: relative; transition: background-color .25s, color .25s; }
+
+/* Rutnät + guldglöd i bakgrunden */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(60rem 32rem at 50% -8%, rgb(var(--gold) / 0.14), transparent 70%),
+    linear-gradient(rgb(var(--grid) / var(--grid-a)) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--grid) / var(--grid-a)) 1px, transparent 1px);
+  background-size: 100% 100%, 44px 44px, 44px 44px;
+  background-position: center top;
+  -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 75% at 50% 0%, #000 40%, transparent 100%);
+}
 
 @layer components {
   .card { @apply rounded-3xl border border-line bg-card/80 backdrop-blur; }
   .input { @apply w-full rounded-2xl border border-line bg-ink px-4 py-3 text-[15px] outline-none transition placeholder:text-mute focus:border-gold; }
   .label { @apply mb-1.5 block text-xs font-medium uppercase tracking-wider text-mute; }
   .btn { @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-[15px] font-semibold transition active:scale-[.98] disabled:opacity-40; }
-  .btn-gold { @apply btn bg-gold text-ink hover:brightness-110; }
+  .btn-gold { @apply btn bg-gold text-ongold hover:brightness-110; }
   .btn-ghost { @apply btn border border-line bg-card hover:border-mute; }
   .chip { @apply rounded-2xl border border-line bg-card px-4 py-3 text-left transition hover:border-mute; }
   .chip-on { @apply border-gold bg-gold-soft; }

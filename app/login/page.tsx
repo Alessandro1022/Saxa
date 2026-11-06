@@ -17,6 +17,20 @@ export default function Login() {
     e.preventDefault()
     setBusy(true)
     setMsg('')
+    try {
+      await run()
+    } catch (err) {
+      console.error(err)
+      setMsg(
+        !process.env.NEXT_PUBLIC_SUPABASE_URL
+          ? 'Supabase-nycklarna saknas i Vercel. Lägg in dem och gör Redeploy.'
+          : 'Kunde inte nå servern. Försök igen.'
+      )
+      setBusy(false)
+    }
+  }
+
+  async function run() {
     const supabase = createClient()
     if (mode === 'in') {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -44,7 +58,7 @@ export default function Login() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6">
-      <Link href="/" className="mb-8 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gold text-xl font-black text-ink">S</Link>
+      <Link href="/" className="mb-8 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gold text-xl font-black text-ongold">S</Link>
       <h1 className="text-3xl font-bold">{mode === 'in' ? 'Logga in' : 'Skapa konto'}</h1>
       <p className="mt-2 text-mute">För salonger och frisörer.</p>
       <form onSubmit={submit} className="mt-8 grid gap-3">

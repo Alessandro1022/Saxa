@@ -40,7 +40,7 @@ export default async function BookingPage({ params }: { params: Promise<{ token:
       <div className="rise text-center">
         <div
           className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full text-4xl ${
-            cancelled ? 'bg-red-500/15 text-red-300' : 'bg-gold text-ink'
+            cancelled ? 'bg-red-500/15 text-red-300' : 'bg-gold text-ongold'
           }`}
         >
           {cancelled ? '✕' : '✓'}

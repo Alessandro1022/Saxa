@@ -169,7 +169,7 @@ export default function BookingFlow({
                   key={d}
                   onClick={() => setDate(d)}
                   className={`flex h-[72px] w-14 shrink-0 flex-col items-center justify-center rounded-2xl border transition ${
-                    on ? 'border-gold bg-gold text-ink' : 'border-line bg-card'
+                    on ? 'border-gold bg-gold text-ongold' : 'border-line bg-card'
                   }`}
                 >
                   <span className={`text-[11px] uppercase ${on ? '' : 'text-mute'}`}>{d === today ? 'Idag' : WEEKDAYS[weekdayOf(d)]}</span>
@@ -198,7 +198,7 @@ export default function BookingFlow({
                       setError('')
                     }}
                     className={`h-11 rounded-xl border text-sm font-medium transition ${
-                      time === s.time ? 'border-gold bg-gold text-ink' : 'border-line bg-card hover:border-mute'
+                      time === s.time ? 'border-gold bg-gold text-ongold' : 'border-line bg-card hover:border-mute'
                     }`}
                   >
                     {s.time}

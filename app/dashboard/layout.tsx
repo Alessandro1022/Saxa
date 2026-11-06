@@ -9,8 +9,8 @@ export default async function DashLayout({ children }: { children: React.ReactNo
   const { salon } = await requireSalon()
   return (
     <div className="mx-auto min-h-dvh max-w-3xl px-5 pb-28 pt-6 md:pb-10">
-      <header className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-gold font-black text-ink">
+      <header className="mb-6 flex items-center gap-3 pr-12">
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-gold font-black text-ongold">
           {salon.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={salon.logo_url} alt="" className="h-full w-full object-cover" />
@@ -25,7 +25,7 @@ export default async function DashLayout({ children }: { children: React.ReactNo
           </Link>
         </div>
         <form action={signOut}>
-          <button className="text-xs text-mute hover:text-white">Logga ut</button>
+          <button className="text-xs text-mute hover:text-fg">Logga ut</button>
         </form>
       </header>
       <div className="mb-6 hidden md:block">

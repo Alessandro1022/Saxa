@@ -50,7 +50,7 @@ export default async function SalonPage({ params }: { params: Promise<{ slug: st
               // eslint-disable-next-line @next/next/no-img-element
               <img src={salon.logo_url} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full items-center justify-center text-3xl font-black text-ink">{salon.name[0]}</div>
+              <div className="flex h-full items-center justify-center text-3xl font-black text-ongold">{salon.name[0]}</div>
             )}
           </div>
           <h1 className="mt-3 text-2xl font-bold tracking-tight">{salon.name}</h1>

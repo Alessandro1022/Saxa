@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-16">
       <div className="rise">
-        <div className="mb-8 inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-gold text-2xl font-black text-ink">S</div>
+        <div className="mb-8 inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-gold text-2xl font-black text-ongold">S</div>
         <h1 className="text-4xl font-bold tracking-tight">Bokning som bara funkar.</h1>
         <p className="mt-4 text-lg text-mute">
           En länk i bion. Kunderna bokar själva, du ser allt i din kalender. Ingen provision.
