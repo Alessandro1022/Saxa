@@ -38,8 +38,8 @@ def strands(skel, ox, oy, sc, count):
         norms.append((-dy / L, dx / L))
     for k in range(count):
         off = (k - (count - 1) / 2) * 1.9 + random.uniform(-0.8, 0.8)
-        f1, f2 = random.uniform(0.6, 1.6), random.uniform(0, 6.28)
-        amp = random.uniform(0.6, 2.2)
+        f1, f2 = random.uniform(3.5, 6.5), random.uniform(0, 6.28)
+        amp = random.uniform(1.4, 2.8)
         s = random.randint(0, 3); e = len(base) - random.randint(0, 3)
         pts = []
         for i in range(s, e):
@@ -49,16 +49,24 @@ def strands(skel, ox, oy, sc, count):
             y = base[i][1] + norms[i][1] * w
             pts.append((ox + x * sc, oy + y * sc))
         # lösa hårtoppar i ändarna
-        if random.random() < 0.5 and len(pts) > 3:
-            (x1, y1), (x2, y2) = pts[-2], pts[-1]
-            ang = math.atan2(y2 - y1, x2 - x1) + random.uniform(-0.7, 0.7)
-            ln = random.uniform(5, 14)
-            pts.append((x2 + math.cos(ang) * ln, y2 + math.sin(ang) * ln))
+        # krulliga ändar (en liten lock)
+        for end in ([-1] if random.random() < 0.6 else []) + ([0] if random.random() < 0.35 else []):
+            if len(pts) < 4: break
+            (x1, y1), (x2, y2) = (pts[-2], pts[-1]) if end == -1 else (pts[1], pts[0])
+            ang = math.atan2(y2 - y1, x2 - x1)
+            turn = random.choice([-1, 1]); r0 = random.uniform(5, 9)
+            curl = []
+            for j in range(1, 16):
+                a = ang + turn * j * 0.42
+                r = r0 * (1 - j / 22)
+                cx = x2 + math.cos(ang) * r0 * 0.2; cy = y2 + math.sin(ang) * r0 * 0.2
+                curl.append((x2 + (math.cos(a) - math.cos(ang)) * r + math.cos(ang) * j * 0.6, y2 + (math.sin(a) - math.sin(ang)) * r + math.sin(ang) * j * 0.6))
+            pts = pts + curl if end == -1 else list(reversed(curl)) + pts
         d = 'M' + ' L'.join(f'{x:.1f} {y:.1f}' for x, y in pts)
         paths.append((d, random.uniform(1.8, 3.2), random.uniform(0.6, 1.0)))
     return paths
 
-def svg(size=512, bg=True):
+def svg(size=512, bg=True, rx=114):
     sc = 1.04
     word_w = 422 * sc
     ox, oy = (512 - word_w) / 2, (512 - 140 * sc) / 2 + 4
@@ -70,13 +78,13 @@ def svg(size=512, bg=True):
     flies = []
     for _ in range(9):
         x, y = random.uniform(70, 440), random.choice([random.uniform(70, 150), random.uniform(370, 450)])
-        ln, a, c = random.uniform(14, 30), random.uniform(0, 3.14), random.uniform(-8, 8)
-        x2, y2 = x + math.cos(a) * ln, y + math.sin(a) * ln
-        flies.append(f'<path d="M{x:.1f} {y:.1f} Q{(x+x2)/2 + c:.1f} {(y+y2)/2 - c:.1f} {x2:.1f} {y2:.1f}" stroke-width="{random.uniform(1.1,1.8):.2f}" opacity="{random.uniform(.25,.55):.2f}"/>')
+        a0, turn, r0 = random.uniform(0, 6.28), random.choice([-1, 1]), random.uniform(6, 11)
+        sp = [(x + math.cos(a0 + turn * j * 0.35) * r0 * (1 - j / 40) + j * 0.9, y + math.sin(a0 + turn * j * 0.35) * r0 * (1 - j / 40) + j * 0.5) for j in range(30)]
+        flies.append('<path d="M' + ' L'.join(f'{px:.1f} {py:.1f}' for px, py in sp) + f'" stroke-width="{random.uniform(1.1,1.7):.2f}" opacity="{random.uniform(.3,.6):.2f}"/>')
     grid = ''.join(f'<path d="M{i} 0V512M0 {i}H512"/>' for i in range(32, 512, 64))
     body = ''.join(f'<path d="{d}" stroke-width="{w:.2f}" opacity="{o:.2f}"/>' for d, w, o in out)
-    bgsvg = f'''<rect width="512" height="512" rx="114" fill="url(#bg)"/>
-  <rect width="512" height="512" rx="114" fill="url(#glow)"/>
+    bgsvg = f'''<rect width="512" height="512" rx="{rx}" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="{rx}" fill="url(#glow)"/>
   <g stroke="#ffffff" stroke-opacity=".035" stroke-width="1">{grid}</g>''' if bg else ''
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="{size}" height="{size}">
   <defs>
@@ -93,4 +101,5 @@ root = os.path.join(os.path.dirname(__file__), '..')
 random.seed(7); open(os.path.join(root, 'public/logo.svg'), 'w').write(svg())
 random.seed(7); open(os.path.join(root, 'app/icon.svg'), 'w').write(svg())
 random.seed(7); open(os.path.join(root, 'public/logo-mark.svg'), 'w').write(svg(bg=False))
+random.seed(7); open(os.path.join(root, 'public/logo-square.svg'), 'w').write(svg(rx=0))
 print('ok')

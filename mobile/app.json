@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Saxa",
+    "slug": "saxa",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "saxa",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#09090b",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "se.aetossystems.saxa",
+      "buildNumber": "1",
+      "config": { "usesNonExemptEncryption": false },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Saxa använder dina bilder så att du kan lägga upp profil- och salongsbilder.",
+        "NSCameraUsageDescription": "Saxa använder kameran så att du kan ta en profil- eller salongsbild."
+      }
+    },
+    "android": {
+      "package": "se.aetossystems.saxa",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#09090b"
+      }
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#09090b"
+        }
+      ]
+    ],
+    "extra": {
+      "siteUrl": "https://saxa1001.vercel.app"
+    }
+  }
+}
