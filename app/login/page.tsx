@@ -115,6 +115,11 @@ function LoginInner() {
         </form>
         {msg && <p className="fade mt-4 rounded-2xl bg-gold-soft px-4 py-3 text-sm text-gold">{msg}</p>}
 
+        {mode === 'up' && (
+          <p className="mt-4 text-center text-xs text-mute">
+            Genom att skapa konto godkänner du vår <Link href="/integritet" className="underline">integritetspolicy</Link>.
+          </p>
+        )}
         <button
           onClick={() => {
             setMode(mode === 'in' ? 'up' : 'in')

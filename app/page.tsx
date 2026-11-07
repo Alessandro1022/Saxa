@@ -160,7 +160,7 @@ export default async function Home() {
         </section>
 
         <footer className="mt-14 flex items-center justify-center gap-2 text-sm text-mute">
-          <Scissors size={14} /> Saxa · by Aetos Systems
+          <Scissors size={14} /> Saxa · by Aetos Systems · <Link href="/integritet" className="hover:text-fg">Integritet</Link>
         </footer>
       </div>
 

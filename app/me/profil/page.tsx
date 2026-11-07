@@ -8,6 +8,7 @@ import CustomerNav from '@/components/CustomerNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import ImageUpload from '@/components/ImageUpload'
 import { Flash } from '@/components/ui'
+import DeleteAccount from '@/components/DeleteAccount'
 import { logout, saveProfile } from '../actions'
 
 export const dynamic = 'force-dynamic'
@@ -62,6 +63,9 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
       <form action={logout} className="mt-4">
         <button className="btn-soft w-full text-red-400"><LogOut size={18} /> Logga ut</button>
       </form>
+
+      <DeleteAccount />
+      <Link href="/integritet" className="mt-3 block text-center text-xs text-mute hover:text-fg">Integritetspolicy</Link>
 
       <CustomerNav />
     </main>
