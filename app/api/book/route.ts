@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { admin } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+import { getAuth } from '@/lib/auth'
 import { getAvailability } from '@/lib/availability'
 import { isDate, isTime, zoned } from '@/lib/time'
 
@@ -18,10 +18,7 @@ export async function POST(req: Request) {
   if (!salonId || !serviceId || !staffId || !isDate(date) || !isTime(time))
     return NextResponse.json({ error: 'Välj tjänst, frisör och tid' }, { status: 400 })
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuth()
   if (!user && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
     return NextResponse.json({ error: 'Fyll i din e-post' }, { status: 400 })
 

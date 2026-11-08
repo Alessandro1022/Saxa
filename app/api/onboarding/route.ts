@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { RESERVED, slugify } from '@/lib/salon'
 
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
       { salon_id: salon.id, name: 'Herrklippning', duration_min: 30, price_sek: 350, sort: 0 },
       { salon_id: salon.id, name: 'Skäggtrim', duration_min: 20, price_sek: 200, sort: 1 },
     ])
+    revalidateTag('public')
     return NextResponse.json({ ok: true, next: '/dashboard?welcome=1' })
   } catch (e) {
     console.error('onboarding crash', e)

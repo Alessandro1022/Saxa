@@ -1,13 +1,12 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getAuth } from '@/lib/auth'
 import { Flash, Logo } from '@/components/ui'
 import OnboardingForm from '@/components/OnboardingForm'
 
 export default async function Onboarding({ searchParams }: { searchParams: Promise<{ e?: string }> }) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuth()
   if (!user) redirect('/login')
   const { data: m } = await supabase.from('salon_members').select('salon_id').eq('user_id', user.id).limit(1).maybeSingle()
   if (m) redirect('/dashboard')

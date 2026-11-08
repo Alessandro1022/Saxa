@@ -1,6 +1,8 @@
+import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from './supabase/server'
+import { getAuth } from './auth'
 
 export type Salon = {
   id: string
@@ -16,18 +18,16 @@ export type Salon = {
   timezone: string
 }
 
-export async function requireSalon() {
+export const requireSalon = cache(async () => {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-  const { data: m } = await supabase.from('salon_members').select('salon_id').eq('user_id', user.id).limit(1).maybeSingle()
-  if (!m) redirect('/onboarding')
-  const { data: salon } = await supabase.from('salons').select('*').eq('id', m.salon_id).single()
+  const user = await getAuth()
+  if (!user) redirect('/login?as=salon')
+  // Ett anrop: medlemskap + salong
+  const { data: m } = await supabase.from('salon_members').select('salons(*)').eq('user_id', user.id).limit(1).maybeSingle()
+  const salon = m?.salons as unknown as Salon | null
   if (!salon) redirect('/onboarding')
-  return { supabase, user, salon: salon as Salon }
-}
+  return { supabase, user, salon }
+})
 
 export async function origin() {
   const h = await headers()

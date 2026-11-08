@@ -1,9 +1,10 @@
+import { unstable_cache } from 'next/cache'
 import { admin } from './supabase/admin'
 import type { SalonCard, Pro } from '@/components/Discover'
 
 type R = { avg: number; n: number }
 
-export async function loadDiscover(): Promise<{ salons: SalonCard[]; pros: Pro[] }> {
+async function _loadDiscover(): Promise<{ salons: SalonCard[]; pros: Pro[] }> {
   const db = admin()
   const [salons, staff, services, sr, pr] = await Promise.all([
     db.from('salons').select('id, slug, name, city, address, cover_url, logo_url').order('created_at', { ascending: false }),
@@ -43,3 +44,6 @@ export async function loadDiscover(): Promise<{ salons: SalonCard[]; pros: Pro[]
   return { salons: out, pros }
 }
 
+
+// Publik data är samma för alla – cacha 60 s, töms direkt när en salong ändrar något (tag 'public')
+export const loadDiscover = unstable_cache(_loadDiscover, ['discover'], { revalidate: 60, tags: ['public'] })

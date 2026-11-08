@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireSalon, RESERVED, slugify } from '@/lib/salon'
 import { isDate, isTime, zoned } from '@/lib/time'
@@ -64,12 +64,14 @@ export async function saveService(f: FormData) {
     ? await supabase.from('services').update(row).eq('id', id)
     : await supabase.from('services').insert(row)
   if (error) back('/dashboard/services', 'Kunde inte spara (längd 5–480 min)')
+  revalidateTag('public')
   revalidatePath('/dashboard/services')
 }
 
 export async function deleteService(f: FormData) {
   const { supabase } = await requireSalon()
   await supabase.from('services').delete().eq('id', s(f, 'id'))
+  revalidateTag('public')
   revalidatePath('/dashboard/services')
 }
 
@@ -96,12 +98,14 @@ export async function saveStaff(f: FormData) {
       )
     }
   }
+  revalidateTag('public')
   revalidatePath('/dashboard/staff')
 }
 
 export async function deleteStaff(f: FormData) {
   const { supabase } = await requireSalon()
   await supabase.from('staff').delete().eq('id', s(f, 'id'))
+  revalidateTag('public')
   revalidatePath('/dashboard/staff')
 }
 
@@ -117,6 +121,7 @@ export async function saveHours(f: FormData) {
   }
   await supabase.from('staff_hours').delete().eq('staff_id', staffId)
   if (rows.length) await supabase.from('staff_hours').insert(rows)
+  revalidateTag('public')
   revalidatePath('/dashboard/staff')
 }
 
@@ -140,6 +145,7 @@ export async function saveSalon(f: FormData) {
     })
     .eq('id', salon.id)
   if (error) back('/dashboard/settings', error.code === '23505' ? 'Länken är redan tagen' : 'Kunde inte spara')
+  revalidateTag('public')
   revalidatePath('/dashboard', 'layout')
   redirect('/dashboard/settings?ok=1')
 }

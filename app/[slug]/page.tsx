@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import type { Metadata } from 'next'
 import { ArrowLeft, MapPin, Phone, Star } from 'lucide-react'
 import { admin } from '@/lib/supabase/admin'
@@ -14,7 +15,7 @@ export const dynamic = 'force-dynamic'
 
 type R = { avg: number; n: number }
 
-async function load(slug: string) {
+async function _load(slug: string) {
   const db = admin()
   const { data: salon } = await db
     .from('salons')
@@ -42,6 +43,8 @@ async function load(slug: string) {
     reviews: (reviews ?? []).map((r) => ({ ...r, who: (people ?? []).find((p) => p.id === r.customer_id) })),
   }
 }
+
+const load = (slug: string) => unstable_cache(() => _load(slug), ['salon', slug], { revalidate: 60, tags: ['public'] })()
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const data = await load((await params).slug)

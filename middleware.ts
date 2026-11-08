@@ -19,9 +19,9 @@ export async function middleware(request: NextRequest) {
       },
     }
   )
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // getClaims verifierar JWT lokalt (snabbt) och förnyar sessionen vid behov
+  const { data } = await supabase.auth.getClaims()
+  const user = data?.claims?.sub
 
   const path = request.nextUrl.pathname
   const isProtected = path.startsWith('/dashboard') || path.startsWith('/onboarding') || path.startsWith('/me')
