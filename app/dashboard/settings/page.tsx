@@ -2,26 +2,16 @@ import { Star } from 'lucide-react'
 import SubmitButton from '@/components/SubmitButton'
 import { requireSalon, origin } from '@/lib/salon'
 import { admin } from '@/lib/supabase/admin'
-import { connectStripe, savePayments, saveSalon, stripeDashboard } from '../actions'
-import { stripe, stripeEnabled } from '@/lib/stripe'
-import { CreditCard, ExternalLink, ShieldCheck } from 'lucide-react'
+import { savePayments, saveSalon } from '../actions'
+import { CreditCard } from 'lucide-react'
 import ImageUpload from '@/components/ImageUpload'
 import CopyButton from '@/components/CopyButton'
 import { Avatar, Flash } from '@/components/ui'
 
-export default async function Settings({ searchParams }: { searchParams: Promise<{ e?: string; ok?: string; stripe?: string }> }) {
+export default async function Settings({ searchParams }: { searchParams: Promise<{ e?: string; ok?: string }> }) {
   const sp = await searchParams
-  const { salon, supabase } = await requireSalon()
+  const { salon } = await requireSalon()
 
-  // Stäm av Stripe-kontot när salongen kommer tillbaka från Stripes onboarding
-  let ready = !!salon.payments_ready
-  if (salon.stripe_account_id && !ready && stripeEnabled()) {
-    try {
-      const a = await stripe().accounts.retrieve(salon.stripe_account_id)
-      ready = !!a.charges_enabled
-      if (ready) await supabase.from('salons').update({ payments_ready: true }).eq('id', salon.id)
-    } catch {}
-  }
   const mode = salon.pay_mode ?? 'none'
   const link = `${await origin()}/${salon.slug}`
   const db = admin()
@@ -38,7 +28,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
   return (
     <div>
       <h1 className="rise mb-5 text-[26px] font-bold tracking-tight">Salong</h1>
-      <Flash e={sp.e} ok={sp.stripe === 'klar' && ready ? 'Stripe är kopplat ✓' : sp.ok ? 'Sparat ✓' : undefined} />
+      <Flash e={sp.e} ok={sp.ok ? 'Sparat ✓' : undefined} />
 
       <div className="card rise mb-4 p-5">
         <div className="label">Din bokningslänk</div>
@@ -115,7 +105,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gold-soft text-gold"><CreditCard size={20} /></div>
           <div className="flex-1">
             <div className="font-semibold">Betalning vid bokning</div>
-            <div className="text-sm text-mute">Färre no-shows: kunden betalar handpenning eller hela priset direkt.</div>
+            <div className="text-sm text-mute">Färre no-shows: kunden swishar handpenning eller hela priset när den bokar.</div>
           </div>
         </div>
 
@@ -149,25 +139,6 @@ export default async function Settings({ searchParams }: { searchParams: Promise
           </p>
           <SubmitButton pending="Sparar…">Spara betalning</SubmitButton>
         </form>
-
-        {stripeEnabled() && (
-          <div className="mt-5 border-t pt-4 hair">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <ShieldCheck size={16} className="text-gold" /> Kort & Apple Pay {ready ? '· kopplat' : '(valfritt)'}
-            </div>
-            <p className="mt-1 text-xs text-mute">Används när inget Swish-nummer är ifyllt. Betalning och återbetalning sker automatiskt via Stripe.</p>
-            {!ready && (
-              <form action={connectStripe} className="mt-3">
-                <SubmitButton className="btn-soft w-full" pending="Öppnar Stripe…">{salon.stripe_account_id ? 'Fortsätt koppla Stripe' : 'Koppla Stripe'}</SubmitButton>
-              </form>
-            )}
-            {salon.stripe_account_id && (
-              <form action={stripeDashboard} className="mt-3">
-                <button className="flex w-full items-center justify-center gap-1.5 text-sm text-mute hover:text-fg">Utbetalningar & kvitton i Stripe <ExternalLink size={13} /></button>
-              </form>
-            )}
-          </div>
-        )}
       </section>
 
       <section className="mt-8">

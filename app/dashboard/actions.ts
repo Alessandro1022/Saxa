@@ -5,7 +5,6 @@ import { redirect } from 'next/navigation'
 import { requireSalon, RESERVED, slugify } from '@/lib/salon'
 import { isDate, isTime, zoned } from '@/lib/time'
 import { notifyBooking } from '@/lib/notify'
-import { refundIfPaid, stripe, stripeEnabled } from '@/lib/stripe'
 import { origin } from '@/lib/salon'
 
 const s = (f: FormData, k: string) => String(f.get(k) ?? '').trim()
@@ -47,7 +46,6 @@ export async function cancelBooking(f: FormData) {
   const { supabase, salon } = await requireSalon()
   const id = s(f, 'id')
   await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id).eq('salon_id', salon.id)
-  await refundIfPaid(id)
   await notifyBooking(id, 'cancelled', await origin())
   revalidatePath('/dashboard')
 }
@@ -199,14 +197,13 @@ export async function saveSalon(f: FormData) {
   redirect('/dashboard/settings?ok=1')
 }
 
-// ---------- Betalning (Stripe Connect) ----------
+// ---------- Betalning (Swish) ----------
 export async function savePayments(f: FormData) {
   const { supabase, salon } = await requireSalon()
   const mode = ['none', 'deposit', 'full'].includes(s(f, 'pay_mode')) ? s(f, 'pay_mode') : 'none'
   const swish = s(f, 'swish_number').replace(/\D/g, '')
-  const stripeReady = !!salon.payments_ready && stripeEnabled()
   if (swish && swish.length < 8) back('/dashboard/settings', 'Swish-numret ser fel ut')
-  if (mode !== 'none' && !swish && !stripeReady) back('/dashboard/settings', 'Fyll i ditt Swish-nummer för att ta betalt')
+  if (mode !== 'none' && !swish) back('/dashboard/settings', 'Fyll i ditt Swish-nummer för att ta betalt')
   const { error } = await supabase
     .from('salons')
     .update({ swish_number: swish || null, pay_mode: mode, deposit_sek: Math.max(5, Math.min(5000, n(f, 'deposit_sek') ?? 100)) })
@@ -226,46 +223,6 @@ export async function markPaid(f: FormData) {
     .eq('id', s(f, 'id'))
     .eq('salon_id', salon.id)
   revalidatePath('/dashboard')
-}
-
-export async function connectStripe() {
-  const { supabase, salon, user } = await requireSalon()
-  if (!stripeEnabled()) back('/dashboard/settings', 'Betalning är inte aktiverat på servern ännu')
-  const site = await origin()
-  let acct = (salon as unknown as { stripe_account_id?: string | null }).stripe_account_id
-  if (!acct) {
-    const base = {
-      type: 'express' as const,
-      country: 'SE',
-      email: user.email || undefined,
-      business_profile: { name: salon.name, url: `${site}/${salon.slug}`, mcc: '7230' },
-      metadata: { salon_id: salon.id },
-    }
-    let a
-    try {
-      a = await stripe().accounts.create({ ...base, capabilities: { card_payments: { requested: true }, transfers: { requested: true }, swish_payments: { requested: true } } })
-    } catch {
-      a = await stripe().accounts.create({ ...base, capabilities: { card_payments: { requested: true }, transfers: { requested: true } } })
-    }
-    acct = a.id
-    const { error } = await supabase.from('salons').update({ stripe_account_id: acct }).eq('id', salon.id)
-    if (error) back('/dashboard/settings', 'Kör 005_payments.sql i Supabase först')
-  }
-  const link = await stripe().accountLinks.create({
-    account: acct!,
-    type: 'account_onboarding',
-    refresh_url: `${site}/dashboard/settings?stripe=igen#betalning`,
-    return_url: `${site}/dashboard/settings?stripe=klar#betalning`,
-  })
-  redirect(link.url)
-}
-
-export async function stripeDashboard() {
-  const { salon } = await requireSalon()
-  const acct = (salon as unknown as { stripe_account_id?: string | null }).stripe_account_id
-  if (!acct || !stripeEnabled()) back('/dashboard/settings', 'Inget Stripe-konto kopplat')
-  const l = await stripe().accounts.createLoginLink(acct!)
-  redirect(l.url)
 }
 
 export async function signOut() {

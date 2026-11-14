@@ -27,7 +27,6 @@ type Row = {
   payment_status?: string | null
   paid_sek?: number | null
   due_sek?: number | null
-  stripe_payment_intent?: string | null
 }
 
 export default async function Bookings({
@@ -177,8 +176,7 @@ export default async function Bookings({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold">
                       {r.customer_name}
-                      {r.payment_status === 'paid' && r.stripe_payment_intent && <span className="shrink-0 rounded-full bg-gold-soft px-2 py-0.5 text-[10px] font-medium text-gold">Betald {r.paid_sek} kr</span>}
-                      {(r.payment_status === 'awaiting' || (r.payment_status === 'paid' && !r.stripe_payment_intent)) && (
+                      {(r.payment_status === 'awaiting' || r.payment_status === 'paid') && (
                         <form action={markPaid} className="shrink-0">
                           <input type="hidden" name="id" value={r.id} />
                           <input type="hidden" name="due" value={r.due_sek ?? r.paid_sek ?? 0} />

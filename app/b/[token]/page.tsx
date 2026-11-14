@@ -6,7 +6,7 @@ import { getMe } from '@/lib/user'
 import { fmtTz, prettyDate } from '@/lib/time'
 import { Avatar } from '@/components/ui'
 import { canChange, notifyBooking } from '@/lib/notify'
-import { confirmPaid, refundIfPaid, stripe, stripeEnabled, swishDigits, swishLink } from '@/lib/stripe'
+import { swishDigits, swishLink } from '@/lib/pay'
 import { origin } from '@/lib/salon'
 
 export const dynamic = 'force-dynamic'
@@ -22,14 +22,13 @@ async function cancel(formData: FormData) {
   const s = bk?.salons as unknown as { cancel_hours?: number } | undefined
   if (!bk || bk.status !== 'confirmed' || !canChange(bk.starts_at, s?.cancel_hours)) redirect(`/b/${token}`)
   await db.from('bookings').update({ status: 'cancelled' }).eq('id', bk.id)
-  await refundIfPaid(bk.id)
   await notifyBooking(bk.id, 'cancelled', await origin())
   redirect(`/b/${token}`)
 }
 
-export default async function BookingPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ flyttad?: string; betald?: string }> }) {
+export default async function BookingPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ flyttad?: string }> }) {
   const { token } = await params
-  const { flyttad, betald } = await searchParams
+  const { flyttad } = await searchParams
   if (!uuid.test(token)) notFound()
   const [{ data: b }, me] = await Promise.all([
     admin()
@@ -41,25 +40,10 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
   ])
   if (!b) notFound()
 
-  // Väntar på betalning: kolla direkt hos Stripe (webhooken kan vara några sekunder efter)
-  let payUrl: string | null = null
-  if (b.status === 'pending' && b.stripe_session_id && stripeEnabled()) {
-    try {
-      const session = await stripe().checkout.sessions.retrieve(b.stripe_session_id)
-      if (await confirmPaid(session)) {
-        await notifyBooking(b.id, 'new', await origin())
-        b.status = 'confirmed'
-        b.payment_status = 'paid'
-        b.paid_sek = Math.round((session.amount_total ?? 0) / 100)
-      } else if (session.status === 'open') payUrl = session.url
-    } catch {}
-  }
-
   const salon = b.salons as unknown as { name: string; slug: string; address: string | null; timezone: string; logo_url: string | null; phone: string | null; cancel_hours?: number; swish_number?: string | null }
   const staff = b.staff as unknown as { name: string; photo_url: string | null }
   const date = fmtTz(b.starts_at, salon.timezone, 'yyyy-MM-dd')
-  const pending = b.status === 'pending'
-  const cancelled = b.status === 'cancelled' || (pending && !payUrl)
+  const cancelled = b.status !== 'confirmed' && b.status !== 'no_show'
   const past = Date.parse(b.starts_at) < Date.now()
   const swishNo = swishDigits(salon.swish_number)
   const awaiting = b.status === 'confirmed' && b.payment_status === 'awaiting' && !!swishNo && !!b.due_sek
@@ -75,16 +59,14 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
         >
           {cancelled ? <X size={40} /> : <Check size={44} strokeWidth={3} />}
         </div>
-        <h1 className="mt-6 text-[30px] font-bold tracking-tight">{pending && payUrl ? 'Nästan klart' : cancelled ? (pending ? 'Betalningen hann gå ut' : 'Avbokad') : flyttad ? 'Tiden är flyttad!' : 'Du är bokad!'}</h1>
+        <h1 className="mt-6 text-[30px] font-bold tracking-tight">{cancelled ? 'Avbokad' : flyttad ? 'Tiden är flyttad!' : 'Du är bokad!'}</h1>
         <p className="mt-1 text-mute">
-          {pending && payUrl
-            ? 'Betala för att säkra din tid.'
-            : cancelled
+          {cancelled
               ? 'Tiden är nu ledig för andra.'
               : awaiting
                 ? 'Tiden är din – swisha förskottet för att slutföra.'
                 : b.payment_status === 'paid'
-                ? `Betalt ${b.paid_sek ?? ''} kr${betald ? ' – tack!' : ''} · Vi ses, ${b.customer_name.split(' ')[0]} ✂️`
+                ? `Betalt ${b.paid_sek ?? ''} kr · Vi ses, ${b.customer_name.split(' ')[0]} ✂️`
                 : `Vi ses, ${b.customer_name.split(' ')[0]} ✂️`}
         </p>
       </div>
@@ -116,9 +98,6 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
       </div>
 
       <div className="rise rise-2 mt-6 grid gap-3">
-        {pending && payUrl && (
-          <a href={payUrl} className="btn-gold !py-4 text-base">Betala och boka</a>
-        )}
         {awaiting && (
           <div className="card p-5 text-center">
             <div className="text-sm text-mute">{salon.name} tar {b.due_sek} kr i förskott</div>
@@ -128,11 +107,10 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
             </p>
           </div>
         )}
-        {cancelled && b.payment_status === 'paid' && !b.stripe_payment_intent && (
+        {cancelled && b.payment_status === 'paid' && (
           <p className="text-center text-sm text-mute">Kontakta salongen för återbetalning av {b.paid_sek} kr.</p>
         )}
-        {b.payment_status === 'refunded' && <p className="text-center text-sm text-mute">Betalningen är återbetald.</p>}
-        {!cancelled && !pending && !past && (
+        {!cancelled && !past && (
           <a href={`/api/booking-ics/${token}`} className={awaiting ? 'btn-soft' : 'btn-gold'}><CalendarPlus size={18} /> Lägg i kalendern</a>
         )}
         {changeable ? (

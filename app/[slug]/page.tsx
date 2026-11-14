@@ -4,7 +4,7 @@ import { unstable_cache } from 'next/cache'
 import type { Metadata } from 'next'
 import { ArrowLeft, MapPin, Phone, Star } from 'lucide-react'
 import { admin } from '@/lib/supabase/admin'
-import { payCfg } from '@/lib/stripe'
+import { payCfg } from '@/lib/pay'
 import { getMe } from '@/lib/user'
 import BookingFlow from '@/components/BookingFlow'
 import ThemeToggle from '@/components/ThemeToggle'
@@ -57,7 +57,7 @@ export default async function SalonPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ staff?: string; omboka?: string; betalning?: string }>
+  searchParams: Promise<{ staff?: string; omboka?: string }>
 }) {
   const [data, me, sp] = await Promise.all([load((await params).slug), getMe(), searchParams])
   if (!data) notFound()
@@ -133,7 +133,6 @@ export default async function SalonPage({
             me={me ? { name: me.full_name ?? '', phone: me.phone ?? '', email: me.email } : null}
             reschedule={reschedule}
             pay={payCfg(salon)}
-            notice={sp.betalning === 'avbruten' ? 'Betalningen avbröts – tiden är släppt. Välj en tid igen.' : undefined}
           />
         ) : (
           <p className="card mx-5 mt-8 p-6 text-center text-mute">Salongen har inte öppnat onlinebokningen än.</p>

@@ -47,16 +47,3 @@ Lägg till i Vercel för bekräftelsemejl till kund och notis till salong:
 
 ## Betalning med Swish (standard)
 Kör `supabase/006_swish.sql`. Salongen fyller i sitt Swish-nummer under Salong → Betalning vid bokning. Inget mer behövs.
-
-## Betalning med kort (Stripe Connect, valfritt)
-1. Skapa konto på stripe.com → aktivera **Connect** (Express-konton, land Sverige). Aktivera Swish under Settings → Payment methods.
-2. Kör `supabase/005_payments.sql`.
-3. Vercel env:
-   - `STRIPE_SECRET_KEY` – `sk_live_…` (eller `sk_test_…` för test)
-   - `STRIPE_WEBHOOK_SECRET` – `whsec_…` från webhooken nedan
-   - `PLATFORM_FEE_PERCENT` – valfritt, t.ex. `0` (Saxas andel av varje betalning)
-4. Stripe → Developers → Webhooks → Add endpoint: `https://<domän>/api/stripe/webhook`
-   - Händelser: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired`, `account.updated` (bocka i *Connected accounts* för den sista)
-5. Salongen: Panel → Salong → **Koppla Stripe** → välj Handpenning eller Hela priset.
-
-Avbokning i tid återbetalar automatiskt. Utebliven kund – salongen behåller betalningen.
