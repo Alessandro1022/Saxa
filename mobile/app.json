@@ -2,7 +2,7 @@
   "expo": {
     "name": "Saxa",
     "slug": "saxa",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "saxa",
@@ -48,10 +48,14 @@
       ]
     ],
     "extra": {
-      "siteUrl": "https://saxa1001.vercel.app"
+      "siteUrl": "https://saxa1001.vercel.app",
+      "eas": {
+        "projectId": "0dccfc0d-fadb-4eb3-ba55-e44da1076cff"
+      }
     },
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "owner": "wehelie"
   }
 }

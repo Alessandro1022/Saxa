@@ -1,6 +1,7 @@
 import { admin } from './supabase/admin'
 import { fmtTz, prettyDate } from './time'
 import { bookingRef } from './ref'
+import { customerTokens, salonTokens, sendPush } from './push'
 
 /**
  * Mejl via Resend (resend.com). Aktiveras när RESEND_API_KEY finns i Vercel.
@@ -39,7 +40,7 @@ export async function notifyBooking(bookingId: string, kind: Kind, origin: strin
     const db = admin()
     const { data: b } = await db
       .from('bookings')
-      .select('id, starts_at, service_name, customer_name, customer_phone, customer_email, cancel_token, salons(*), staff(name)')
+      .select('id, salon_id, customer_id, starts_at, service_name, customer_name, customer_phone, customer_email, cancel_token, salons(*), staff(name)')
       .eq('id', bookingId)
       .single()
     if (!b) return
@@ -48,6 +49,24 @@ export async function notifyBooking(bookingId: string, kind: Kind, origin: strin
     const when = `${prettyDate(fmtTz(b.starts_at, salon.timezone, 'yyyy-MM-dd'))} kl ${fmtTz(b.starts_at, salon.timezone, 'HH:mm')}`
     const link = `${origin}/b/${b.cancel_token}`
     const details = `Bokningsnr <b>${bookingRef(b.id)}</b><br><b>${b.service_name}</b> med ${staff?.name ?? 'frisören'}<br>${when}<br>${salon.name}${salon.address ? `, ${salon.address}` : ''}`
+
+    // Push till appen (kundens "ny bokning"-notis skickas när telefonen visar bekräftelsen)
+    const shortWhen = `${prettyDate(fmtTz(b.starts_at, salon.timezone, 'yyyy-MM-dd'))} kl ${fmtTz(b.starts_at, salon.timezone, 'HH:mm')}`
+    const ref = bookingRef(b.id)
+    await Promise.all([
+      kind === 'new'
+        ? null
+        : sendPush(await customerTokens(b.id, b.customer_id), {
+            title: kind === 'moved' ? 'Din tid är flyttad' : 'Din bokning är avbokad',
+            body: `${b.service_name} · ${shortWhen} hos ${salon.name} · ${ref}`,
+            url: link,
+          }),
+      sendPush(await salonTokens(b.salon_id), {
+        title: { new: 'Ny bokning 🎉', moved: 'Bokning flyttad', cancelled: 'Avbokning' }[kind],
+        body: `${b.customer_name} · ${b.service_name} · ${shortWhen} · ${ref}`,
+        url: `${origin}/dashboard?d=${fmtTz(b.starts_at, salon.timezone, 'yyyy-MM-dd')}`,
+      }),
+    ])
 
     const customerTitle = { new: 'Du är bokad! ✂️', moved: 'Din tid är flyttad', cancelled: 'Din bokning är avbokad' }[kind]
     await send(b.customer_email, `${customerTitle} – ${salon.name}`, wrap(customerTitle, details, kind === 'cancelled' ? undefined : { href: link, label: 'Visa eller ändra bokning' }))
@@ -71,4 +90,19 @@ export async function notifyBooking(bookingId: string, kind: Kind, origin: strin
 /** Får kunden fortfarande avboka/omboka själv? */
 export function canChange(startsAt: string, cancelHours: number | null | undefined) {
   return Date.parse(startsAt) - Date.now() > (cancelHours ?? 2) * 3600_000
+}
+
+/** Push till kunden när salongen bekräftat Swish-betalningen. */
+export async function notifyPaid(bookingId: string, origin: string) {
+  try {
+    const { data: b } = await admin().from('bookings').select('id, customer_id, paid_sek, cancel_token, salons(name)').eq('id', bookingId).single()
+    if (!b) return
+    await sendPush(await customerTokens(b.id, b.customer_id), {
+      title: 'Betalning bekräftad ✓',
+      body: `${(b.salons as unknown as { name: string }).name} har fått dina ${b.paid_sek} kr · ${bookingRef(b.id)}`,
+      url: `${origin}/b/${b.cancel_token}`,
+    })
+  } catch (e) {
+    console.error('notifyPaid', e)
+  }
 }

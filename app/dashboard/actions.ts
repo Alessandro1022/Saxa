@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireSalon, RESERVED, slugify } from '@/lib/salon'
 import { isDate, isTime, zoned } from '@/lib/time'
-import { notifyBooking } from '@/lib/notify'
+import { notifyBooking, notifyPaid } from '@/lib/notify'
 import { origin } from '@/lib/salon'
 
 const s = (f: FormData, k: string) => String(f.get(k) ?? '').trim()
@@ -222,6 +222,7 @@ export async function markPaid(f: FormData) {
     .update(paid ? { payment_status: 'awaiting', paid_sek: null } : { payment_status: 'paid', paid_sek: n(f, 'due') })
     .eq('id', s(f, 'id'))
     .eq('salon_id', salon.id)
+  if (!paid) await notifyPaid(s(f, 'id'), await origin())
   revalidatePath('/dashboard')
 }
 

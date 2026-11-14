@@ -6,7 +6,7 @@ import { addDays, fmtTz, prettyDate, isDate, MONTHS, todayIn, WEEKDAYS, weekdayO
 import { addManualBooking, addTimeOff, cancelBooking, deleteTimeOff, markPaid, toggleNoShow } from './actions'
 import Tabs from '@/components/Tabs'
 import { bookingRef } from '@/lib/ref'
-import { Ban, UserX } from 'lucide-react'
+import { Ban, Mail, UserX } from 'lucide-react'
 import { Avatar, Flash } from '@/components/ui'
 import CopyButton from '@/components/CopyButton'
 import Sheet from '@/components/Sheet'
@@ -21,6 +21,7 @@ type Row = {
   price_sek: number | null
   customer_name: string
   customer_phone: string | null
+  customer_email?: string | null
   note: string | null
   source: string
   staff_id: string
@@ -200,6 +201,9 @@ export default async function Bookings({
                     </div>
                   </div>
                   {s && (staff ?? []).length > 1 && <span className="hidden sm:block"><Avatar name={s.name} src={s.photo_url} size={30} /></span>}
+                  {!r.customer_phone && r.customer_email && (
+                    <a href={`mailto:${r.customer_email}`} className="icon-btn !h-10 !w-10" aria-label="Mejla"><Mail size={16} /></a>
+                  )}
                   {r.customer_phone && (
                     <a href={`tel:${r.customer_phone}`} className="icon-btn !h-10 !w-10" aria-label="Ring"><Phone size={16} /></a>
                   )}

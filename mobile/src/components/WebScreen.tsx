@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Image, Linking, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native'
 import { WebView, type WebViewNavigation } from 'react-native-webview'
 import type { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes'
@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics'
 import { router } from 'expo-router'
 import { GOLD, SITE, palette } from '../lib/config'
 import { syncReminder } from '../lib/reminders'
+import { currentPushToken, ensurePush, onPushToken } from '../lib/push'
 
 // react-native-webviews typer krockar med React 19.3-typerna (props: never). Körningen är opåverkad.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,11 +26,23 @@ function isExternal(url: string) {
 }
 
 // Säger till sajten att den visas i appen (döljer webbens egen meny m.m.)
-const INJECT = `document.documentElement.classList.add('in-app');window.__SAXA_APP__=true;true;`
+const inject = (push: string | null) =>
+  `document.documentElement.classList.add('in-app');window.__SAXA_APP__=true;${push ? `window.__SAXA_PUSH__=${JSON.stringify(push)};` : ''}true;`
 
 /** En flik/sida i appen som visar en del av Saxa-sajten med native-beteenden runt om. */
 export default function WebScreen({ path, onReady, tabRoots }: { path: string; onReady?: () => void; tabRoots?: boolean }) {
-  const ref = useRef<{ reload: () => void } | null>(null)
+  const ref = useRef<{ reload: () => void; injectJavaScript: (js: string) => void } | null>(null)
+  const [push, setPush] = useState(currentPushToken())
+
+  // När telefonen får sin push-adress: ge den till sidan som visas
+  useEffect(
+    () =>
+      onPushToken((t) => {
+        setPush(t)
+        ref.current?.injectJavaScript(`window.__SAXA_PUSH__=${JSON.stringify(t)};window.dispatchEvent(new Event('saxa-push'));true;`)
+      }),
+    []
+  )
   const dark = useColorScheme() !== 'light'
   const c = palette(dark)
   const [failed, setFailed] = useState(false)
@@ -64,6 +77,8 @@ export default function WebScreen({ path, onReady, tabRoots }: { path: string; o
       if (!lastPath.current.startsWith('/b/')) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
       syncReminder(SITE, m[1]) // påminnelse dagen innan + 2 h innan
     }
+    // Fråga om notiser när det spelar roll: efter en bokning eller i salongens panel
+    if (m || p.startsWith('/dashboard')) ensurePush(true)
     lastPath.current = p
   }, [])
 
@@ -93,7 +108,7 @@ export default function WebScreen({ path, onReady, tabRoots }: { path: string; o
         style={{ backgroundColor: c.bg }}
         originWhitelist={['*']}
         applicationNameForUserAgent="SaxaApp/1.1"
-        injectedJavaScriptBeforeContentLoaded={INJECT}
+        injectedJavaScriptBeforeContentLoaded={inject(push)}
         onShouldStartLoadWithRequest={onShouldStart}
         onNavigationStateChange={onNav}
         onLoadEnd={() => {
