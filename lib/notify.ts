@@ -1,5 +1,6 @@
 import { admin } from './supabase/admin'
 import { fmtTz, prettyDate } from './time'
+import { bookingRef } from './ref'
 
 /**
  * Mejl via Resend (resend.com). Aktiveras när RESEND_API_KEY finns i Vercel.
@@ -38,7 +39,7 @@ export async function notifyBooking(bookingId: string, kind: Kind, origin: strin
     const db = admin()
     const { data: b } = await db
       .from('bookings')
-      .select('starts_at, service_name, customer_name, customer_phone, customer_email, cancel_token, salons(*), staff(name)')
+      .select('id, starts_at, service_name, customer_name, customer_phone, customer_email, cancel_token, salons(*), staff(name)')
       .eq('id', bookingId)
       .single()
     if (!b) return
@@ -46,7 +47,7 @@ export async function notifyBooking(bookingId: string, kind: Kind, origin: strin
     const staff = b.staff as unknown as { name: string } | null
     const when = `${prettyDate(fmtTz(b.starts_at, salon.timezone, 'yyyy-MM-dd'))} kl ${fmtTz(b.starts_at, salon.timezone, 'HH:mm')}`
     const link = `${origin}/b/${b.cancel_token}`
-    const details = `<b>${b.service_name}</b> med ${staff?.name ?? 'frisören'}<br>${when}<br>${salon.name}${salon.address ? `, ${salon.address}` : ''}`
+    const details = `Bokningsnr <b>${bookingRef(b.id)}</b><br><b>${b.service_name}</b> med ${staff?.name ?? 'frisören'}<br>${when}<br>${salon.name}${salon.address ? `, ${salon.address}` : ''}`
 
     const customerTitle = { new: 'Du är bokad! ✂️', moved: 'Din tid är flyttad', cancelled: 'Din bokning är avbokad' }[kind]
     await send(b.customer_email, `${customerTitle} – ${salon.name}`, wrap(customerTitle, details, kind === 'cancelled' ? undefined : { href: link, label: 'Visa eller ändra bokning' }))

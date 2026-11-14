@@ -2,9 +2,10 @@ import Link from 'next/link'
 import SubmitButton from '@/components/SubmitButton'
 import { Phone, X } from 'lucide-react'
 import { requireSalon, origin } from '@/lib/salon'
-import { addDays, fmtTz, isDate, MONTHS, todayIn, WEEKDAYS, weekdayOf, zoned } from '@/lib/time'
+import { addDays, fmtTz, prettyDate, isDate, MONTHS, todayIn, WEEKDAYS, weekdayOf, zoned } from '@/lib/time'
 import { addManualBooking, addTimeOff, cancelBooking, deleteTimeOff, markPaid, toggleNoShow } from './actions'
 import Tabs from '@/components/Tabs'
+import { bookingRef } from '@/lib/ref'
 import { Ban, UserX } from 'lucide-react'
 import { Avatar, Flash } from '@/components/ui'
 import CopyButton from '@/components/CopyButton'
@@ -79,6 +80,7 @@ export default async function Bookings({
   const weekRevenue = all
     .filter((r) => r.status === 'confirmed' && fmtTz(r.starts_at, tz, 'yyyy-MM-dd') < weekEnd)
     .reduce((a, r) => a + (r.price_sek ?? 0), 0)
+  const upcoming = all.filter((r) => r.status === 'confirmed' && Date.parse(r.ends_at) > Date.now()).slice(0, 12)
   const nextUp = all.find((r) => r.status === 'confirmed' && Date.parse(r.starts_at) > Date.now())
   const link = `${await origin()}/${salon.slug}`
   const [, m, dd] = day.split('-').map(Number)
@@ -161,7 +163,7 @@ export default async function Bookings({
             <p className="text-sm text-mute">Tryck på + för att lägga in en DM- eller telefonbokning.</p>
           </div>
         ) : (
-          <div className="grid gap-2.5">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5">
             {list.map((r, i) => {
               const s = staffMap.get(r.staff_id)
               const done = Date.parse(r.ends_at) < Date.now()
@@ -193,11 +195,11 @@ export default async function Bookings({
                       {r.source === 'manual' && <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-mute" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 7%, rgb(var(--ink)))' }}>DM</span>}
                     </div>
                     <div className="truncate text-sm text-mute">
-                      {r.service_name}
+                      {r.service_name} · {bookingRef(r.id)}
                       {r.note ? ` · ”${r.note}”` : ''}
                     </div>
                   </div>
-                  {s && <Avatar name={s.name} src={s.photo_url} size={30} />}
+                  {s && (staff ?? []).length > 1 && <span className="hidden sm:block"><Avatar name={s.name} src={s.photo_url} size={30} /></span>}
                   {r.customer_phone && (
                     <a href={`tel:${r.customer_phone}`} className="icon-btn !h-10 !w-10" aria-label="Ring"><Phone size={16} /></a>
                   )}
@@ -219,6 +221,33 @@ export default async function Bookings({
           </div>
         )}
       </section>
+
+      {upcoming.length > 0 && (
+        <section className="mt-9">
+          <h2 className="mb-3 text-sm font-medium text-mute">Alla kommande bokningar</h2>
+          <div className="card divide-hair overflow-hidden">
+            {upcoming.map((r) => {
+              const d = fmtTz(r.starts_at, tz, 'yyyy-MM-dd')
+              return (
+                <Link key={r.id} href={d === today ? '/dashboard' : `/dashboard?d=${d}`} className="flex items-center gap-3 px-4 py-3.5">
+                  <div className="w-[92px] shrink-0">
+                    <div className="text-xs text-mute">{d === today ? 'Idag' : d === addDays(today, 1) ? 'Imorgon' : prettyDate(d)}</div>
+                    <div className="text-[17px] font-bold leading-tight">{fmtTz(r.starts_at, tz, 'HH:mm')}</div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-semibold">{r.customer_name}</div>
+                    <div className="truncate text-sm text-mute">
+                      {r.service_name} · {staffMap.get(r.staff_id)?.name ?? ''} · {bookingRef(r.id)}
+                    </div>
+                  </div>
+                  {r.payment_status === 'awaiting' && <span className="shrink-0 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-500">Väntar på Swish</span>}
+                  {r.payment_status === 'paid' && <span className="shrink-0 rounded-full bg-gold-soft px-2 py-0.5 text-[10px] font-semibold text-gold">Betald</span>}
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       <Sheet title="Lägg till" defaultOpen={!!sp.e}>
         <Tabs labels={['Bokning', 'Blockera tid']}>

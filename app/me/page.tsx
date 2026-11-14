@@ -7,6 +7,8 @@ import { fmtTz, prettyDate } from '@/lib/time'
 import CustomerNav from '@/components/CustomerNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import ReviewForm from '@/components/ReviewForm'
+import GuestBookings from '@/components/GuestBookings'
+import { bookingRef } from '@/lib/ref'
 import { Avatar, Flash } from '@/components/ui'
 import { Cover } from '@/components/Img'
 import { cancelMyBooking } from './actions'
@@ -28,7 +30,21 @@ type B = {
 export default async function MyBookings({ searchParams }: { searchParams: Promise<{ e?: string }> }) {
   const { e } = await searchParams
   const me = await getMe()
-  if (!me) redirect('/login?next=/me')
+  if (!me)
+    return (
+      <main className="mx-auto max-w-2xl px-5 pb-32 pt-[max(env(safe-area-inset-top),20px)]">
+        <header className="rise flex items-center gap-3 pt-2">
+          <h1 className="flex-1 text-[30px] font-bold tracking-tight">Bokningar</h1>
+          <ThemeToggle />
+        </header>
+        <p className="mb-4 mt-2 text-sm text-mute">Bokningar gjorda på den här enheten.</p>
+        <GuestBookings />
+        <Link href="/login?next=/me" className="card mt-4 block p-4 text-center text-sm">
+          <span className="font-semibold text-gold">Logga in eller skapa konto</span> <span className="text-mute">för att se dina bokningar på alla enheter</span>
+        </Link>
+        <CustomerNav />
+      </main>
+    )
   const db = admin()
   const [{ data }, { data: reviews }] = await Promise.all([
     db
@@ -91,7 +107,7 @@ export default async function MyBookings({ searchParams }: { searchParams: Promi
                     <div className="min-w-0 flex-1">
                       <div className="truncate font-medium">{b.service_name}</div>
                       <div className="flex items-center gap-1 text-sm text-mute">
-                        <Clock size={13} /> {fmtTz(b.starts_at, tz, 'HH:mm')}–{fmtTz(b.ends_at, tz, 'HH:mm')} · {b.staff?.name}
+                        <Clock size={13} /> {fmtTz(b.starts_at, tz, 'HH:mm')}–{fmtTz(b.ends_at, tz, 'HH:mm')} · {b.staff?.name} · {bookingRef(b.id)}
                       </div>
                     </div>
                     <a href={`/api/booking-ics/${b.cancel_token}`} className="icon-btn" aria-label="Lägg i kalender"><CalendarPlus size={18} /></a>

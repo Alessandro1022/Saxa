@@ -7,6 +7,8 @@ import { fmtTz, prettyDate } from '@/lib/time'
 import { Avatar } from '@/components/ui'
 import { canChange, notifyBooking } from '@/lib/notify'
 import { swishDigits, swishLink } from '@/lib/pay'
+import { bookingRef } from '@/lib/ref'
+import BookingKeeper from '@/components/BookingKeeper'
 import { origin } from '@/lib/salon'
 
 export const dynamic = 'force-dynamic'
@@ -47,7 +49,7 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
   const past = Date.parse(b.starts_at) < Date.now()
   const swishNo = swishDigits(salon.swish_number)
   const awaiting = b.status === 'confirmed' && b.payment_status === 'awaiting' && !!swishNo && !!b.due_sek
-  const swishMsg = `Saxa ${String(b.customer_name).split(' ')[0]} ${fmtTz(b.starts_at, salon.timezone, 'd.M HH.mm')}`
+  const swishMsg = `${bookingRef(b.id)} ${String(b.customer_name).split(' ')[0]} ${fmtTz(b.starts_at, salon.timezone, 'd.M HH.mm')}`
   const changeable = b.status === 'confirmed' && canChange(b.starts_at, salon.cancel_hours)
 
   return (
@@ -61,14 +63,16 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
         </div>
         <h1 className="mt-6 text-[30px] font-bold tracking-tight">{cancelled ? 'Avbokad' : flyttad ? 'Tiden är flyttad!' : 'Du är bokad!'}</h1>
         <p className="mt-1 text-mute">
-          {cancelled
-              ? 'Tiden är nu ledig för andra.'
-              : awaiting
-                ? 'Tiden är din – swisha förskottet för att slutföra.'
-                : b.payment_status === 'paid'
-                ? `Betalt ${b.paid_sek ?? ''} kr · Vi ses, ${b.customer_name.split(' ')[0]} ✂️`
-                : `Vi ses, ${b.customer_name.split(' ')[0]} ✂️`}
+          {cancelled ? 'Tiden är nu ledig för andra.' : `${prettyDate(date)} kl ${fmtTz(b.starts_at, salon.timezone, 'HH:mm')} hos ${salon.name}`}
         </p>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm">
+          <span className="rounded-full px-3.5 py-1.5 font-semibold" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 7%, rgb(var(--ink)))' }}>
+            Bokningsnr {bookingRef(b.id)}
+          </span>
+          {!cancelled && awaiting && <span className="rounded-full bg-amber-500/20 px-3.5 py-1.5 font-semibold text-amber-500">Väntar på Swish {b.due_sek} kr</span>}
+          {!cancelled && b.payment_status === 'paid' && <span className="rounded-full bg-gold-soft px-3.5 py-1.5 font-semibold text-gold">Betalt {b.paid_sek} kr ✓</span>}
+        </div>
+        <BookingKeeper token={token} />
       </div>
 
       <div className="card rise rise-1 mt-8 p-5">
@@ -100,8 +104,9 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
       <div className="rise rise-2 mt-6 grid gap-3">
         {awaiting && (
           <div className="card p-5 text-center">
-            <div className="text-sm text-mute">{salon.name} tar {b.due_sek} kr i förskott</div>
-            <a href={swishLink(swishNo, b.due_sek, swishMsg)} className="btn-gold mt-3 w-full !py-4 text-base">Betala {b.due_sek} kr med Swish</a>
+            <div className="font-semibold">Tiden är bokad åt dig ✓</div>
+            <div className="mt-1 text-sm text-mute">{salon.name} tar {b.due_sek} kr i förskott. Swisha nu så är allt klart.</div>
+            <a href={swishLink(swishNo, b.due_sek, swishMsg)} target="_blank" rel="noreferrer" className="btn-gold mt-3 w-full !py-4 text-base">Betala {b.due_sek} kr med Swish</a>
             <p className="mt-3 text-xs text-mute">
               Öppnas inte Swish? Swisha {b.due_sek} kr till <b className="text-fg">{swishNo}</b> och skriv ”{swishMsg}”. Salongen bekräftar när betalningen kommit in.
             </p>
@@ -132,9 +137,8 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
             </p>
           )
         )}
-        {me ? (
-          <Link href="/me" className="btn-soft">Mina bokningar</Link>
-        ) : (
+        <Link href="/me" className="btn-soft">Mina bokningar</Link>
+        {!me && (
           <Link href="/login?mode=up" className="card block p-4 text-center text-sm">
             <span className="font-semibold text-gold">Skapa konto</span> <span className="text-mute">och samla alla dina bokningar på ett ställe</span>
           </Link>

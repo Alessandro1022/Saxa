@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
   const user = data?.claims?.sub
 
   const path = request.nextUrl.pathname
-  const isProtected = path.startsWith('/dashboard') || path.startsWith('/onboarding') || path.startsWith('/me')
+  const isProtected = path.startsWith('/dashboard') || path.startsWith('/onboarding') || path.startsWith('/me/profil')
   if (!user && isProtected) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'

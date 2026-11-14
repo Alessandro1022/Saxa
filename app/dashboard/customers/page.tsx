@@ -37,13 +37,15 @@ export default async function Customers({ searchParams }: { searchParams: Promis
       c.visits++
       c.spent += b.price_sek ?? 0
       if (!c.last) c.last = b.starts_at
-    } else c.next = b.starts_at
+    } else c.next = b.starts_at // listan är nyast först → slutar på den närmaste
     map.set(k, c)
   }
   const needle = q.toLowerCase().trim()
   const list = [...map.values()]
     .filter((c) => !needle || `${c.name} ${c.phone ?? ''} ${c.email ?? ''}`.toLowerCase().includes(needle))
     .sort((a, b) => (b.last ?? b.next ?? '').localeCompare(a.last ?? a.next ?? ''))
+
+  const when = (iso: string) => `${prettyDate(fmtTz(iso, salon.timezone, 'yyyy-MM-dd'))} kl ${fmtTz(iso, salon.timezone, 'HH:mm')}`
 
   return (
     <div>
@@ -67,7 +69,7 @@ export default async function Customers({ searchParams }: { searchParams: Promis
                 </div>
                 <div className="truncate text-sm text-mute">
                   {c.visits} besök · {c.spent.toLocaleString('sv-SE')} kr
-                  {c.next ? ` · nästa ${prettyDate(fmtTz(c.next, salon.timezone, 'yyyy-MM-dd'))}` : c.last ? ` · senast ${prettyDate(fmtTz(c.last, salon.timezone, 'yyyy-MM-dd'))}` : ''}
+                  {c.next ? ` · nästa ${when(c.next)}` : c.last ? ` · senast ${when(c.last)}` : ''}
                 </div>
               </div>
               {c.phone && <a href={`tel:${c.phone}`} className="icon-btn !h-10 !w-10" aria-label="Ring"><Phone size={16} /></a>}
