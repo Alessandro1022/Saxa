@@ -13,7 +13,7 @@ export function stripe() {
 /** Plattformsavgift i procent (t.ex. 0 eller 3). */
 export const feePercent = () => Math.max(0, Math.min(20, Number(process.env.PLATFORM_FEE_PERCENT ?? 0)))
 
-export type PayCfg = { mode: 'none' | 'deposit' | 'full'; deposit: number }
+export type PayCfg = { mode: 'none' | 'deposit' | 'full'; deposit: number; method: 'swish' | 'stripe' | null; swish?: string }
 
 /** Hur mycket som ska betalas vid bokning för en tjänst. 0 = ingen betalning. */
 export function amountFor(cfg: PayCfg, price: number | null | undefined) {
@@ -23,11 +23,22 @@ export function amountFor(cfg: PayCfg, price: number | null | undefined) {
   return a >= 5 ? a : 0
 }
 
-/** Salongens betalinställningar – bara om Stripe är på och kontot är klart. */
+export const swishDigits = (v: unknown) => String(v ?? '').replace(/\D/g, '')
+
+/** Salongens betalinställningar. Swish-nummer går först; annars Stripe om det är kopplat. */
 export function payCfg(salon: Record<string, unknown>): PayCfg {
-  const ok = stripeEnabled() && !!salon.stripe_account_id && salon.payments_ready === true
   const mode = (salon.pay_mode as PayCfg['mode']) ?? 'none'
-  return { mode: ok ? mode : 'none', deposit: Number(salon.deposit_sek ?? 100) }
+  const deposit = Number(salon.deposit_sek ?? 100)
+  const swish = swishDigits(salon.swish_number)
+  if (swish.length >= 8) return { mode, deposit, method: mode === 'none' ? null : 'swish', swish }
+  const ok = stripeEnabled() && !!salon.stripe_account_id && salon.payments_ready === true
+  return { mode: ok ? mode : 'none', deposit, method: ok && mode !== 'none' ? 'stripe' : null }
+}
+
+/** Länk som öppnar Swish-appen med nummer, belopp och meddelande ifyllt. */
+export function swishLink(number: string, amount: number, msg: string) {
+  const clean = msg.replace(/[^a-zA-Z0-9åäöÅÄÖ :.,-]/g, '').slice(0, 50)
+  return `https://app.swish.nu/1/p/sw/?sw=${swishDigits(number)}&amt=${amount}&cur=SEK&msg=${encodeURIComponent(clean)}&src=qr`
 }
 
 /** Tider som hålls för betalning släpps efter 35 min. */

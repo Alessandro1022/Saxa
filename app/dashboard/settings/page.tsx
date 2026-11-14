@@ -38,7 +38,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
   return (
     <div>
       <h1 className="rise mb-5 text-[26px] font-bold tracking-tight">Salong</h1>
-      <Flash e={sp.e} ok={sp.stripe === 'klar' && ready ? 'Stripe är kopplat ✓ Välj nu hur kunder ska betala.' : sp.ok ? 'Sparat ✓' : undefined} />
+      <Flash e={sp.e} ok={sp.stripe === 'klar' && ready ? 'Stripe är kopplat ✓' : sp.ok ? 'Sparat ✓' : undefined} />
 
       <div className="card rise mb-4 p-5">
         <div className="label">Din bokningslänk</div>
@@ -119,51 +119,54 @@ export default async function Settings({ searchParams }: { searchParams: Promise
           </div>
         </div>
 
-        {!stripeEnabled() ? (
-          <p className="mt-4 rounded-2xl px-4 py-3 text-sm text-mute" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4%, rgb(var(--ink)))' }}>
-            Betalning aktiveras snart. (Admin: lägg in STRIPE_SECRET_KEY i Vercel.)
-          </p>
-        ) : !ready ? (
-          <div className="mt-4">
-            <p className="text-sm text-mute">
-              Koppla ditt företag till Stripe för att ta emot kort, Apple Pay och Swish. Pengarna betalas ut till ditt bankkonto. Tar ca 5 minuter.
-            </p>
-            <form action={connectStripe} className="mt-3">
-              <SubmitButton className="btn-gold w-full" pending="Öppnar Stripe…">
-                {salon.stripe_account_id ? 'Fortsätt koppla Stripe' : 'Koppla Stripe'}
-              </SubmitButton>
-            </form>
+        <form action={savePayments} className="mt-4 grid gap-3">
+          <div>
+            <label className="label">Ditt Swish-nummer</label>
+            <input className="input" name="swish_number" inputMode="numeric" defaultValue={salon.swish_number ?? ''} placeholder="070 123 45 67 eller 123 456 78 90" />
+            <p className="mt-1.5 text-xs text-mute">Pengarna går direkt till dig. Kunden får Swish öppnat med belopp och meddelande ifyllt.</p>
           </div>
-        ) : (
-          <form action={savePayments} className="mt-4 grid gap-3">
-            <div className="flex items-center gap-2 text-sm text-gold"><ShieldCheck size={16} /> Stripe är kopplat</div>
-            <div className="grid gap-2">
-              {([
-                ['none', 'Ingen betalning', 'Kunden betalar i salongen'],
-                ['deposit', 'Handpenning', 'Ett fast belopp dras vid bokning'],
-                ['full', 'Hela priset', 'Kunden betalar allt vid bokning'],
-              ] as const).map(([v, t, d]) => (
-                <label key={v} className="tile flex cursor-pointer items-center gap-3 has-[:checked]:!border-[rgb(var(--gold))]">
-                  <input type="radio" name="pay_mode" value={v} defaultChecked={mode === v} className="h-5 w-5 accent-[#d2ab5c]" />
-                  <span>
-                    <span className="block font-semibold">{t}</span>
-                    <span className="block text-sm text-mute">{d}</span>
-                  </span>
-                </label>
-              ))}
+          <div className="grid gap-2">
+            {([
+              ['none', 'Ingen betalning', 'Kunden betalar i salongen'],
+              ['deposit', 'Handpenning', 'Ett fast belopp betalas vid bokning'],
+              ['full', 'Hela priset', 'Kunden betalar allt vid bokning'],
+            ] as const).map(([v, t, d]) => (
+              <label key={v} className="tile flex cursor-pointer items-center gap-3 has-[:checked]:!border-[rgb(var(--gold))]">
+                <input type="radio" name="pay_mode" value={v} defaultChecked={mode === v} className="h-5 w-5 accent-[#d2ab5c]" />
+                <span>
+                  <span className="block font-semibold">{t}</span>
+                  <span className="block text-sm text-mute">{d}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <div>
+            <label className="label">Handpenning (kr)</label>
+            <input className="input" name="deposit_sek" type="number" min={5} max={5000} defaultValue={salon.deposit_sek ?? 100} />
+          </div>
+          <p className="text-xs text-mute">
+            Bokningen märks ”Väntar på Swish” tills du trycker på märket och bekräftar att pengarna kommit in. Avbokar kunden i tid swishar du tillbaka själv.
+          </p>
+          <SubmitButton pending="Sparar…">Spara betalning</SubmitButton>
+        </form>
+
+        {stripeEnabled() && (
+          <div className="mt-5 border-t pt-4 hair">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <ShieldCheck size={16} className="text-gold" /> Kort & Apple Pay {ready ? '· kopplat' : '(valfritt)'}
             </div>
-            <div>
-              <label className="label">Handpenning (kr)</label>
-              <input className="input" name="deposit_sek" type="number" min={5} max={5000} defaultValue={salon.deposit_sek ?? 100} />
-            </div>
-            <p className="text-xs text-mute">Avbokar kunden i tid återbetalas pengarna automatiskt. Vid utebliven kund behåller du betalningen.</p>
-            <SubmitButton pending="Sparar…">Spara betalning</SubmitButton>
-          </form>
-        )}
-        {salon.stripe_account_id && stripeEnabled() && (
-          <form action={stripeDashboard} className="mt-3">
-            <button className="flex w-full items-center justify-center gap-1.5 text-sm text-mute hover:text-fg">Utbetalningar & kvitton i Stripe <ExternalLink size={13} /></button>
-          </form>
+            <p className="mt-1 text-xs text-mute">Används när inget Swish-nummer är ifyllt. Betalning och återbetalning sker automatiskt via Stripe.</p>
+            {!ready && (
+              <form action={connectStripe} className="mt-3">
+                <SubmitButton className="btn-soft w-full" pending="Öppnar Stripe…">{salon.stripe_account_id ? 'Fortsätt koppla Stripe' : 'Koppla Stripe'}</SubmitButton>
+              </form>
+            )}
+            {salon.stripe_account_id && (
+              <form action={stripeDashboard} className="mt-3">
+                <button className="flex w-full items-center justify-center gap-1.5 text-sm text-mute hover:text-fg">Utbetalningar & kvitton i Stripe <ExternalLink size={13} /></button>
+              </form>
+            )}
+          </div>
         )}
       </section>
 

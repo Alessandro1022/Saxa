@@ -64,6 +64,7 @@ export default function Privacy() {
           <li><b>Salongen du bokar hos</b> ser dina bokningsuppgifter.</li>
           <li><b>Supabase</b> – databas, inloggning och bildlagring.</li>
           <li><b>Vercel</b> – drift av webbplatsen.</li>
+          <li><b>Betalning:</b> om salongen tar förskott betalar du med Swish direkt till salongen. Saxa hanterar inga kort- eller bankuppgifter.</li>
         </ul>
         <p>
           Dessa leverantörer behandlar uppgifterna enligt personuppgiftsbiträdesavtal. Vissa leverantörer kan behandla data

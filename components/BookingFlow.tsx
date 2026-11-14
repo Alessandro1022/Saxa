@@ -42,7 +42,7 @@ export default function BookingFlow({
   initialStaff?: string
   me: { name: string; phone: string; email: string } | null
   reschedule?: { token: string; serviceId: string; staffId: string; bookingId: string }
-  pay?: { mode: 'none' | 'deposit' | 'full'; deposit: number }
+  pay?: { mode: 'none' | 'deposit' | 'full'; deposit: number; method?: 'swish' | 'stripe' | null }
   notice?: string
 }) {
   const router = useRouter()
@@ -329,17 +329,17 @@ export default function BookingFlow({
 
             {payNow >= 5 && (
               <div className="flex items-center justify-between rounded-[20px] px-4 py-3 text-sm" style={soft(4.5)}>
-                <span className="text-mute">{pay?.mode === 'full' ? 'Betalas nu' : 'Handpenning nu'} · kort, Apple Pay eller Swish</span>
+                <span className="text-mute">{pay?.mode === 'full' ? 'Betalas vid bokning' : 'Handpenning'} · {pay?.method === 'swish' ? 'Swish' : 'kort eller Apple Pay'}</span>
                 <span className="font-bold">{payNow} kr</span>
               </div>
             )}
             <button className="btn-gold mt-1 !py-4 text-base" disabled={busy}>
               {busy ? (
-                <><Loader2 size={18} className="animate-spin" /> {reschedule ? 'Flyttar…' : payNow >= 5 ? 'Öppnar betalning…' : 'Bokar…'}</>
+                <><Loader2 size={18} className="animate-spin" /> {reschedule ? 'Flyttar…' : payNow >= 5 && pay?.method !== 'swish' ? 'Öppnar betalning…' : 'Bokar…'}</>
               ) : reschedule ? (
                 'Flytta till den här tiden'
               ) : payNow >= 5 ? (
-                `Betala ${payNow} kr och boka`
+                pay?.method === 'swish' ? `Boka och swisha ${payNow} kr` : `Betala ${payNow} kr och boka`
               ) : (
                 'Bekräfta bokning'
               )}

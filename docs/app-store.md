@@ -49,7 +49,7 @@ iPhone 6,9" (1290 × 2796): `docs/saxa-appstore-1.png` … `-4.png` – dra in a
   - Användarnamn: *(skapa ett kundkonto, t.ex. review@aetossystems.se)*
   - Lösenord: *(ditt valda lösenord)*
 - **Anteckningar:**
-  > Saxa is a booking app for barbers and hair salons in Sweden. You can book without an account: tap "Hitta frisör", choose a salon (e.g. Fade Lab), pick a service and a time, and confirm. After booking, the app schedules local reminder notifications (24 h and 2 h before) and offers native haptics, add-to-calendar and an offline screen. Accounts are optional; account deletion is available under Profil → Radera konto. Salons can sign up under Logga in → Salong. No payments are made in the app.
+  > Saxa is a booking app for barbers and hair salons in Sweden. You can book without an account: tap "Hitta frisör", choose a salon (e.g. Fade Lab), pick a service and a time, and confirm. After booking, the app schedules local reminder notifications (24 h and 2 h before) and offers native haptics, add-to-calendar and an offline screen. Accounts are optional; account deletion is available under Profil → Radera konto. Salons can sign up under Logga in → Salong. Some salons ask for a deposit: the customer pays the salon directly with Swish (Swedish bank payment app) for the in-person haircut service. No digital goods are sold and no in-app purchases are used.
 
 ## App-integritet (Privacy "nutrition label")
 Svara **Ja, vi samlar in data**. Ingen data används för spårning. För varje typ: *Länkad till användaren: Ja · Spårning: Nej · Syfte: Appfunktionalitet*.

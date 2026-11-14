@@ -36,7 +36,8 @@ export async function POST(req: Request) {
   const end = new Date(start.getTime() + (av.service.duration_min as number) * 60000)
   const cfg = payCfg(av.salon)
   const amount = amountFor(cfg, av.service.price_sek as number | null)
-  const mustPay = amount > 0
+  const mustPay = amount > 0 && cfg.method === 'stripe'
+  const viaSwish = amount > 0 && cfg.method === 'swish'
 
   const db = admin()
   const { data, error } = await db
@@ -56,6 +57,7 @@ export async function POST(req: Request) {
       source: 'online',
       customer_id: user?.id ?? null,
       ...(mustPay ? { status: 'pending', payment_status: 'pending' } : {}),
+      ...(viaSwish ? { payment_status: 'awaiting', due_sek: amount } : {}),
     })
     .select('id, cancel_token')
     .single()

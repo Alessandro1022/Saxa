@@ -203,13 +203,29 @@ export async function saveSalon(f: FormData) {
 export async function savePayments(f: FormData) {
   const { supabase, salon } = await requireSalon()
   const mode = ['none', 'deposit', 'full'].includes(s(f, 'pay_mode')) ? s(f, 'pay_mode') : 'none'
+  const swish = s(f, 'swish_number').replace(/\D/g, '')
+  const stripeReady = !!salon.payments_ready && stripeEnabled()
+  if (swish && swish.length < 8) back('/dashboard/settings', 'Swish-numret ser fel ut')
+  if (mode !== 'none' && !swish && !stripeReady) back('/dashboard/settings', 'Fyll i ditt Swish-nummer för att ta betalt')
   const { error } = await supabase
     .from('salons')
-    .update({ pay_mode: mode, deposit_sek: Math.max(5, Math.min(5000, n(f, 'deposit_sek') ?? 100)) })
+    .update({ swish_number: swish || null, pay_mode: mode, deposit_sek: Math.max(5, Math.min(5000, n(f, 'deposit_sek') ?? 100)) })
     .eq('id', salon.id)
-  if (error) back('/dashboard/settings', 'Kör 005_payments.sql i Supabase först')
+  if (error) back('/dashboard/settings', 'Kör 006_swish.sql i Supabase först')
   revalidateTag('public')
   redirect('/dashboard/settings?ok=1#betalning')
+}
+
+// Frisören bekräftar att Swish kommit in (eller ångrar)
+export async function markPaid(f: FormData) {
+  const { supabase, salon } = await requireSalon()
+  const paid = s(f, 'paid') === '1'
+  await supabase
+    .from('bookings')
+    .update(paid ? { payment_status: 'awaiting', paid_sek: null } : { payment_status: 'paid', paid_sek: n(f, 'due') })
+    .eq('id', s(f, 'id'))
+    .eq('salon_id', salon.id)
+  revalidatePath('/dashboard')
 }
 
 export async function connectStripe() {

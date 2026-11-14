@@ -45,7 +45,10 @@ Lägg till i Vercel för bekräftelsemejl till kund och notis till salong:
 - `RESEND_API_KEY` – från resend.com
 - `EMAIL_FROM` – t.ex. `Saxa <bokning@aetossystems.se>` (domänen verifieras i Resend)
 
-## Betalning vid bokning (Stripe Connect)
+## Betalning med Swish (standard)
+Kör `supabase/006_swish.sql`. Salongen fyller i sitt Swish-nummer under Salong → Betalning vid bokning. Inget mer behövs.
+
+## Betalning med kort (Stripe Connect, valfritt)
 1. Skapa konto på stripe.com → aktivera **Connect** (Express-konton, land Sverige). Aktivera Swish under Settings → Payment methods.
 2. Kör `supabase/005_payments.sql`.
 3. Vercel env:

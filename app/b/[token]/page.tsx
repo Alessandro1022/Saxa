@@ -6,7 +6,7 @@ import { getMe } from '@/lib/user'
 import { fmtTz, prettyDate } from '@/lib/time'
 import { Avatar } from '@/components/ui'
 import { canChange, notifyBooking } from '@/lib/notify'
-import { confirmPaid, refundIfPaid, stripe, stripeEnabled } from '@/lib/stripe'
+import { confirmPaid, refundIfPaid, stripe, stripeEnabled, swishDigits, swishLink } from '@/lib/stripe'
 import { origin } from '@/lib/salon'
 
 export const dynamic = 'force-dynamic'
@@ -34,7 +34,7 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
   const [{ data: b }, me] = await Promise.all([
     admin()
       .from('bookings')
-      .select('id, starts_at, ends_at, service_name, price_sek, customer_name, status, payment_status, paid_sek, stripe_session_id, salons(*), staff(name, photo_url)')
+      .select('*, salons(*), staff(name, photo_url)')
       .eq('cancel_token', token)
       .single(),
     getMe(),
@@ -55,12 +55,15 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
     } catch {}
   }
 
-  const salon = b.salons as unknown as { name: string; slug: string; address: string | null; timezone: string; logo_url: string | null; phone: string | null; cancel_hours?: number }
+  const salon = b.salons as unknown as { name: string; slug: string; address: string | null; timezone: string; logo_url: string | null; phone: string | null; cancel_hours?: number; swish_number?: string | null }
   const staff = b.staff as unknown as { name: string; photo_url: string | null }
   const date = fmtTz(b.starts_at, salon.timezone, 'yyyy-MM-dd')
   const pending = b.status === 'pending'
   const cancelled = b.status === 'cancelled' || (pending && !payUrl)
   const past = Date.parse(b.starts_at) < Date.now()
+  const swishNo = swishDigits(salon.swish_number)
+  const awaiting = b.status === 'confirmed' && b.payment_status === 'awaiting' && !!swishNo && !!b.due_sek
+  const swishMsg = `Saxa ${String(b.customer_name).split(' ')[0]} ${fmtTz(b.starts_at, salon.timezone, 'd.M HH.mm')}`
   const changeable = b.status === 'confirmed' && canChange(b.starts_at, salon.cancel_hours)
 
   return (
@@ -78,7 +81,9 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
             ? 'Betala för att säkra din tid.'
             : cancelled
               ? 'Tiden är nu ledig för andra.'
-              : b.payment_status === 'paid'
+              : awaiting
+                ? 'Tiden är din – swisha förskottet för att slutföra.'
+                : b.payment_status === 'paid'
                 ? `Betalt ${b.paid_sek ?? ''} kr${betald ? ' – tack!' : ''} · Vi ses, ${b.customer_name.split(' ')[0]} ✂️`
                 : `Vi ses, ${b.customer_name.split(' ')[0]} ✂️`}
         </p>
@@ -114,9 +119,21 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
         {pending && payUrl && (
           <a href={payUrl} className="btn-gold !py-4 text-base">Betala och boka</a>
         )}
+        {awaiting && (
+          <div className="card p-5 text-center">
+            <div className="text-sm text-mute">{salon.name} tar {b.due_sek} kr i förskott</div>
+            <a href={swishLink(swishNo, b.due_sek, swishMsg)} className="btn-gold mt-3 w-full !py-4 text-base">Betala {b.due_sek} kr med Swish</a>
+            <p className="mt-3 text-xs text-mute">
+              Öppnas inte Swish? Swisha {b.due_sek} kr till <b className="text-fg">{swishNo}</b> och skriv ”{swishMsg}”. Salongen bekräftar när betalningen kommit in.
+            </p>
+          </div>
+        )}
+        {cancelled && b.payment_status === 'paid' && !b.stripe_payment_intent && (
+          <p className="text-center text-sm text-mute">Kontakta salongen för återbetalning av {b.paid_sek} kr.</p>
+        )}
         {b.payment_status === 'refunded' && <p className="text-center text-sm text-mute">Betalningen är återbetald.</p>}
         {!cancelled && !pending && !past && (
-          <a href={`/api/booking-ics/${token}`} className="btn-gold"><CalendarPlus size={18} /> Lägg i kalendern</a>
+          <a href={`/api/booking-ics/${token}`} className={awaiting ? 'btn-soft' : 'btn-gold'}><CalendarPlus size={18} /> Lägg i kalendern</a>
         )}
         {changeable ? (
           <div className="grid grid-cols-2 gap-2">

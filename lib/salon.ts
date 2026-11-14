@@ -23,6 +23,7 @@ export type Salon = {
   payments_ready?: boolean
   pay_mode?: 'none' | 'deposit' | 'full'
   deposit_sek?: number
+  swish_number?: string | null
 }
 
 export const requireSalon = cache(async () => {

@@ -3,7 +3,7 @@ import SubmitButton from '@/components/SubmitButton'
 import { Phone, X } from 'lucide-react'
 import { requireSalon, origin } from '@/lib/salon'
 import { addDays, fmtTz, isDate, MONTHS, todayIn, WEEKDAYS, weekdayOf, zoned } from '@/lib/time'
-import { addManualBooking, addTimeOff, cancelBooking, deleteTimeOff, toggleNoShow } from './actions'
+import { addManualBooking, addTimeOff, cancelBooking, deleteTimeOff, markPaid, toggleNoShow } from './actions'
 import Tabs from '@/components/Tabs'
 import { Ban, UserX } from 'lucide-react'
 import { Avatar, Flash } from '@/components/ui'
@@ -26,6 +26,8 @@ type Row = {
   status: string
   payment_status?: string | null
   paid_sek?: number | null
+  due_sek?: number | null
+  stripe_payment_intent?: string | null
 }
 
 export default async function Bookings({
@@ -173,9 +175,22 @@ export default async function Bookings({
                     <div className="text-xs text-mute">{fmtTz(r.ends_at, tz, 'HH:mm')}</div>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 truncate font-semibold">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold">
                       {r.customer_name}
-                      {r.payment_status === 'paid' && <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[10px] font-medium text-gold">Betald {r.paid_sek} kr</span>}
+                      {r.payment_status === 'paid' && r.stripe_payment_intent && <span className="shrink-0 rounded-full bg-gold-soft px-2 py-0.5 text-[10px] font-medium text-gold">Betald {r.paid_sek} kr</span>}
+                      {(r.payment_status === 'awaiting' || (r.payment_status === 'paid' && !r.stripe_payment_intent)) && (
+                        <form action={markPaid} className="shrink-0">
+                          <input type="hidden" name="id" value={r.id} />
+                          <input type="hidden" name="due" value={r.due_sek ?? r.paid_sek ?? 0} />
+                          <input type="hidden" name="paid" value={r.payment_status === 'paid' ? '1' : '0'} />
+                          <button
+                            title={r.payment_status === 'paid' ? 'Ångra' : 'Markera som betald'}
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${r.payment_status === 'paid' ? 'bg-gold-soft text-gold' : 'bg-amber-500/20 text-amber-500'}`}
+                          >
+                            {r.payment_status === 'paid' ? `Betald ${r.paid_sek} kr ✓` : `Väntar på Swish ${r.due_sek} kr · bekräfta`}
+                          </button>
+                        </form>
+                      )}
                       {noShow && <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-medium text-red-400">Utebliven</span>}
                       {r.source === 'manual' && <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-mute" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 7%, rgb(var(--ink)))' }}>DM</span>}
                     </div>
