@@ -18,7 +18,7 @@ Next.js 15 + Supabase + Tailwind. Mobil-först, mörkt tema med guld.
 - **Dubbelbokningsskydd i databasen** – två kunder kan inte få samma tid
 
 ## Kom igång (ca 10 min)
-1. **Supabase** → nytt projekt → SQL Editor → kör i ordning: `supabase/schema.sql`, `supabase/002_upgrade.sql`, `supabase/003_demo.sql` (10 demosalonger).
+1. **Supabase** → nytt projekt → SQL Editor → kör i ordning: `supabase/schema.sql`, `supabase/002_upgrade.sql`, `supabase/003_demo.sql` (10 demosalonger), `supabase/004_system.sql` (ledighet, bokningsregler, utebliven).
    (Valfritt: kör `supabase/seed-demo.sql` för en demosalong på `/demo`.)
 2. Supabase → Authentication → URL Configuration:
    - Site URL: `https://din-domän.vercel.app`
@@ -39,3 +39,8 @@ Nästa steg: riktig Google-synk (OAuth + Calendar API) så att det kommer in dir
 - AI-receptionist (Gemini) på bokningssidan
 - Recensioner efter besöket
 - Expo-app för kunder (samma Supabase)
+
+## Mejl (valfritt)
+Lägg till i Vercel för bekräftelsemejl till kund och notis till salong:
+- `RESEND_API_KEY` – från resend.com
+- `EMAIL_FROM` – t.ex. `Saxa <bokning@aetossystems.se>` (domänen verifieras i Resend)

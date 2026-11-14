@@ -16,6 +16,9 @@ export type Salon = {
   logo_url: string | null
   cover_url: string | null
   timezone: string
+  cancel_hours?: number
+  lead_minutes?: number
+  notify_email?: string | null
 }
 
 export const requireSalon = cache(async () => {

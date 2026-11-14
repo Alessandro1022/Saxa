@@ -4,6 +4,8 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireSalon, RESERVED, slugify } from '@/lib/salon'
 import { isDate, isTime, zoned } from '@/lib/time'
+import { notifyBooking } from '@/lib/notify'
+import { origin } from '@/lib/salon'
 
 const s = (f: FormData, k: string) => String(f.get(k) ?? '').trim()
 const n = (f: FormData, k: string) => {
@@ -42,7 +44,47 @@ export async function addManualBooking(f: FormData) {
 
 export async function cancelBooking(f: FormData) {
   const { supabase, salon } = await requireSalon()
-  await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', s(f, 'id')).eq('salon_id', salon.id)
+  const id = s(f, 'id')
+  await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id).eq('salon_id', salon.id)
+  await notifyBooking(id, 'cancelled', await origin())
+  revalidatePath('/dashboard')
+}
+
+// Markera utebliven / ångra
+export async function toggleNoShow(f: FormData) {
+  const { supabase, salon } = await requireSalon()
+  const next = s(f, 'status') === 'no_show' ? 'confirmed' : 'no_show'
+  const { error } = await supabase.from('bookings').update({ status: next }).eq('id', s(f, 'id')).eq('salon_id', salon.id)
+  if (error) back('/dashboard', 'Kör 004_system.sql i Supabase för att kunna markera uteblivna')
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/customers')
+}
+
+// ---------- Ledighet / blockerad tid ----------
+export async function addTimeOff(f: FormData) {
+  const { supabase, salon } = await requireSalon()
+  const d1 = s(f, 'from_date'), t1 = s(f, 'from_time') || '00:00'
+  const d2 = s(f, 'to_date') || d1, t2 = s(f, 'to_time') || '23:59'
+  if (!isDate(d1) || !isDate(d2) || !isTime(t1) || !isTime(t2)) back('/dashboard', 'Fyll i från och till')
+  const start = zoned(d1, t1, salon.timezone)
+  const end = zoned(d2, t2, salon.timezone)
+  if (end <= start) back('/dashboard', 'Sluttiden måste vara efter starttiden')
+  const staffId = s(f, 'staff_id')
+  const { error } = await supabase.from('time_off').insert({
+    salon_id: salon.id,
+    staff_id: staffId && staffId !== 'all' ? staffId : null,
+    starts_at: start.toISOString(),
+    ends_at: end.toISOString(),
+    reason: s(f, 'reason') || null,
+  })
+  if (error) back('/dashboard', error.code === '42P01' || error.code === 'PGRST205' ? 'Kör 004_system.sql i Supabase först' : 'Kunde inte spara')
+  revalidatePath('/dashboard')
+  redirect(`/dashboard?ok=2&d=${d1}`)
+}
+
+export async function deleteTimeOff(f: FormData) {
+  const { supabase, salon } = await requireSalon()
+  await supabase.from('time_off').delete().eq('id', s(f, 'id')).eq('salon_id', salon.id)
   revalidatePath('/dashboard')
 }
 
@@ -130,20 +172,25 @@ export async function saveSalon(f: FormData) {
   const { supabase, salon } = await requireSalon()
   const slug = slugify(s(f, 'slug'))
   if (slug.length < 3 || RESERVED.includes(slug)) back('/dashboard/settings', 'Ogiltig länk')
-  const { error } = await supabase
-    .from('salons')
-    .update({
-      name: s(f, 'name') || salon.name,
-      slug,
-      description: s(f, 'description') || null,
-      address: s(f, 'address') || null,
-      city: s(f, 'city') || null,
-      phone: s(f, 'phone') || null,
-      instagram: s(f, 'instagram').replace('@', '') || null,
-      logo_url: s(f, 'logo_url') || null,
-      cover_url: s(f, 'cover_url') || null,
-    })
-    .eq('id', salon.id)
+  const base = {
+    name: s(f, 'name') || salon.name,
+    slug,
+    description: s(f, 'description') || null,
+    address: s(f, 'address') || null,
+    city: s(f, 'city') || null,
+    phone: s(f, 'phone') || null,
+    instagram: s(f, 'instagram').replace('@', '') || null,
+    logo_url: s(f, 'logo_url') || null,
+    cover_url: s(f, 'cover_url') || null,
+  }
+  const extra = {
+    cancel_hours: Math.max(0, Math.min(72, n(f, 'cancel_hours') ?? 2)),
+    lead_minutes: Math.max(0, Math.min(1440, n(f, 'lead_minutes') ?? 30)),
+    notify_email: s(f, 'notify_email') || null,
+  }
+  let { error } = await supabase.from('salons').update({ ...base, ...extra }).eq('id', salon.id)
+  // Utan 004_system.sql finns inte de nya kolumnerna – spara resten ändå
+  if (error?.code === '42703' || error?.code === 'PGRST204') ({ error } = await supabase.from('salons').update(base).eq('id', salon.id))
   if (error) back('/dashboard/settings', error.code === '23505' ? 'Länken är redan tagen' : 'Kunde inte spara')
   revalidateTag('public')
   revalidatePath('/dashboard', 'layout')

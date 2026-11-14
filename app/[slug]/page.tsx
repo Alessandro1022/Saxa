@@ -56,10 +56,18 @@ export default async function SalonPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ staff?: string }>
+  searchParams: Promise<{ staff?: string; omboka?: string }>
 }) {
   const [data, me, sp] = await Promise.all([load((await params).slug), getMe(), searchParams])
   if (!data) notFound()
+
+  // Ombokning via bokningens länk: ?omboka=<token>
+  let reschedule: { token: string; serviceId: string; staffId: string; bookingId: string } | undefined
+  if (sp.omboka && /^[0-9a-f-]{36}$/i.test(sp.omboka)) {
+    const { data: bk } = await admin().from('bookings').select('id, service_id, staff_id, salon_id, status').eq('cancel_token', sp.omboka).single()
+    if (bk && bk.salon_id === data.salon.id && bk.status === 'confirmed' && bk.service_id)
+      reschedule = { token: sp.omboka, serviceId: bk.service_id, staffId: bk.staff_id, bookingId: bk.id }
+  }
   const { salon, staff, services, rating, reviews } = data
   const insta = salon.instagram?.replace('@', '')
 
@@ -84,7 +92,8 @@ export default async function SalonPage({
           )}
         </div>
         {salon.description && <p className="mt-3 text-[15px] leading-relaxed text-mute">{salon.description}</p>}
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
+          <a href="#boka" className="btn-gold !px-5 !py-2 text-sm">Boka tid</a>
           {salon.phone && <a href={`tel:${salon.phone}`} className="pill flex items-center gap-1.5"><Phone size={14} /> Ring</a>}
           {insta && <a href={`https://instagram.com/${insta}`} target="_blank" rel="noreferrer" className="pill">@{insta}</a>}
         </div>
@@ -114,13 +123,14 @@ export default async function SalonPage({
       <div id="boka" className="scroll-mt-4">
         {services.length && staff.length ? (
           <BookingFlow
-            key={sp.staff ?? 'all'}
+            key={(sp.staff ?? 'all') + (reschedule?.token ?? '')}
             salonId={salon.id}
             tz={salon.timezone}
             staff={staff}
             services={services}
             initialStaff={staff.some((s) => s.id === sp.staff) ? sp.staff : undefined}
             me={me ? { name: me.full_name ?? '', phone: me.phone ?? '', email: me.email } : null}
+            reschedule={reschedule}
           />
         ) : (
           <p className="card mx-5 mt-8 p-6 text-center text-mute">Salongen har inte öppnat onlinebokningen än.</p>

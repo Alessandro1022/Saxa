@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, Scissors, Store, Users } from 'lucide-react'
+import { CalendarDays, Contact, Scissors, Store, Users } from 'lucide-react'
 
 const TABS = [
   { href: '/dashboard', label: 'Bokningar', Icon: CalendarDays },
+  { href: '/dashboard/customers', label: 'Kunder', Icon: Contact },
   { href: '/dashboard/services', label: 'Tjänster', Icon: Scissors },
   { href: '/dashboard/staff', label: 'Team', Icon: Users },
   { href: '/dashboard/settings', label: 'Salong', Icon: Store },
@@ -22,7 +23,7 @@ export default function DashNav() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition duration-300 ${on ? 'bg-gold text-ongold' : 'text-mute hover:text-fg'}`}
+              className={`flex items-center gap-2 rounded-full px-3.5 py-2.5 text-sm font-medium transition duration-300 ${on ? 'bg-gold text-ongold' : 'text-mute hover:text-fg'}`}
             >
               <Icon size={18} strokeWidth={on ? 2.4 : 2} />
               <span className={on ? '' : 'hidden sm:inline'}>{label}</span>

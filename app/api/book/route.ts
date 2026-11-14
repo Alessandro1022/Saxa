@@ -3,6 +3,8 @@ import { admin } from '@/lib/supabase/admin'
 import { getAuth } from '@/lib/auth'
 import { getAvailability } from '@/lib/availability'
 import { isDate, isTime, zoned } from '@/lib/time'
+import { notifyBooking } from '@/lib/notify'
+import { origin } from '@/lib/salon'
 
 export async function POST(req: Request) {
   const b = await req.json().catch(() => null)
@@ -49,7 +51,7 @@ export async function POST(req: Request) {
       source: 'online',
       customer_id: user?.id ?? null,
     })
-    .select('cancel_token')
+    .select('id, cancel_token')
     .single()
 
   if (error) {
@@ -64,5 +66,6 @@ export async function POST(req: Request) {
     if (!c?.full_name || !c?.phone)
       await db.from('customers').upsert({ id: user.id, full_name: c?.full_name || name, phone: c?.phone || phone })
   }
+  await notifyBooking(data.id, 'new', await origin())
   return NextResponse.json({ token: data.cancel_token })
 }

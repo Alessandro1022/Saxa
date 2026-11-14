@@ -77,6 +77,23 @@ export default async function Settings({ searchParams }: { searchParams: Promise
             <input className="input" name="instagram" defaultValue={salon.instagram ?? ''} placeholder="dittkonto" />
           </div>
         </div>
+        <div className="mt-2 rounded-[22px] p-4" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 4%, rgb(var(--ink)))' }}>
+          <div className="font-semibold">Bokningsregler</div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Avbokning senast (h innan)</label>
+              <input className="input" name="cancel_hours" type="number" min={0} max={72} defaultValue={salon.cancel_hours ?? 2} />
+            </div>
+            <div>
+              <label className="label">Tidigast bokning (min från nu)</label>
+              <input className="input" name="lead_minutes" type="number" min={0} max={1440} step={15} defaultValue={salon.lead_minutes ?? 30} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Mejl för nya bokningar</label>
+              <input className="input" name="notify_email" type="email" defaultValue={salon.notify_email ?? ''} placeholder="Lämna tomt = ditt inloggningsmejl" />
+            </div>
+          </div>
+        </div>
         <SubmitButton pending="Sparar…">Spara</SubmitButton>
       </form>
 

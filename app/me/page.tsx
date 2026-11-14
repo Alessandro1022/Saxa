@@ -1,13 +1,13 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { CalendarPlus, Clock, MapPin, Scissors, Star, X } from 'lucide-react'
+import { CalendarClock, CalendarPlus, Clock, MapPin, Scissors, Star, X } from 'lucide-react'
 import { admin } from '@/lib/supabase/admin'
 import { getMe } from '@/lib/user'
 import { fmtTz, prettyDate } from '@/lib/time'
 import CustomerNav from '@/components/CustomerNav'
 import ThemeToggle from '@/components/ThemeToggle'
 import ReviewForm from '@/components/ReviewForm'
-import { Avatar } from '@/components/ui'
+import { Avatar, Flash } from '@/components/ui'
 import { Cover } from '@/components/Img'
 import { cancelMyBooking } from './actions'
 
@@ -25,7 +25,8 @@ type B = {
   staff: { name: string; photo_url: string | null } | null
 }
 
-export default async function MyBookings() {
+export default async function MyBookings({ searchParams }: { searchParams: Promise<{ e?: string }> }) {
+  const { e } = await searchParams
   const me = await getMe()
   if (!me) redirect('/login?next=/me')
   const db = admin()
@@ -53,6 +54,7 @@ export default async function MyBookings() {
       </header>
 
       <section className="mt-6">
+        <Flash e={e} />
         <h2 className="mb-3 text-sm font-medium text-mute">Kommande</h2>
         {upcoming.length === 0 ? (
           <div className="card rise px-6 py-10 text-center">
@@ -93,6 +95,7 @@ export default async function MyBookings() {
                       </div>
                     </div>
                     <a href={`/api/booking-ics/${b.cancel_token}`} className="icon-btn" aria-label="Lägg i kalender"><CalendarPlus size={18} /></a>
+                    <Link href={`/${b.salons.slug}?omboka=${b.cancel_token}#boka`} className="icon-btn" aria-label="Flytta tid"><CalendarClock size={18} /></Link>
                     <form action={cancelMyBooking}>
                       <input type="hidden" name="id" value={b.id} />
                       <button className="icon-btn text-red-400" aria-label="Avboka"><X size={18} /></button>

@@ -3,7 +3,9 @@ import SubmitButton from '@/components/SubmitButton'
 import { Phone, X } from 'lucide-react'
 import { requireSalon, origin } from '@/lib/salon'
 import { addDays, fmtTz, isDate, MONTHS, todayIn, WEEKDAYS, weekdayOf, zoned } from '@/lib/time'
-import { addManualBooking, cancelBooking } from './actions'
+import { addManualBooking, addTimeOff, cancelBooking, deleteTimeOff, toggleNoShow } from './actions'
+import Tabs from '@/components/Tabs'
+import { Ban, UserX } from 'lucide-react'
 import { Avatar, Flash } from '@/components/ui'
 import CopyButton from '@/components/CopyButton'
 import Sheet from '@/components/Sheet'
@@ -21,6 +23,7 @@ type Row = {
   note: string | null
   source: string
   staff_id: string
+  status: string
 }
 
 export default async function Bookings({
@@ -35,18 +38,31 @@ export default async function Bookings({
   const day = sp.d && isDate(sp.d) ? sp.d : today
   const DAYS = 14
 
-  const [{ data: staff }, { data: services }, { data: rows }] = await Promise.all([
+  const rangeStart = zoned(today, '00:00', tz).toISOString()
+  const rangeEnd = zoned(addDays(today, DAYS + 30), '00:00', tz).toISOString()
+  const [{ data: staff }, { data: services }, { data: rows }, off] = await Promise.all([
     supabase.from('staff').select('id, name, photo_url').eq('salon_id', salon.id).eq('active', true).order('sort'),
     supabase.from('services').select('id, name, duration_min').eq('salon_id', salon.id).eq('active', true).order('sort'),
     supabase
       .from('bookings')
-      .select('id, starts_at, ends_at, service_name, price_sek, customer_name, customer_phone, note, source, staff_id')
+      .select('id, starts_at, ends_at, service_name, price_sek, customer_name, customer_phone, note, source, staff_id, status')
       .eq('salon_id', salon.id)
-      .eq('status', 'confirmed')
-      .gte('starts_at', zoned(today, '00:00', tz).toISOString())
-      .lt('starts_at', zoned(addDays(today, DAYS + 30), '00:00', tz).toISOString())
+      .in('status', ['confirmed', 'no_show'])
+      .gte('starts_at', rangeStart)
+      .lt('starts_at', rangeEnd)
       .order('starts_at'),
+    supabase.from('time_off').select('id, staff_id, starts_at, ends_at, reason').eq('salon_id', salon.id).lt('starts_at', rangeEnd).gt('ends_at', rangeStart).order('starts_at'),
   ])
+  type Off = { id: string; staff_id: string | null; starts_at: string; ends_at: string; reason: string | null }
+  const offs = (off.data ?? []) as Off[]
+  const dayStartMs = zoned(day, '00:00', tz).getTime()
+  const dayEndMs = zoned(addDays(day, 1), '00:00', tz).getTime()
+  const offToday = offs.filter((o) => Date.parse(o.starts_at) < dayEndMs && Date.parse(o.ends_at) > dayStartMs)
+  const offDays = new Set<string>()
+  for (const o of offs) for (let i = 0; i < DAYS; i++) {
+    const d = addDays(today, i)
+    if (Date.parse(o.starts_at) < zoned(addDays(d, 1), '00:00', tz).getTime() && Date.parse(o.ends_at) > zoned(d, '00:00', tz).getTime()) offDays.add(d)
+  }
 
   const all = (rows ?? []) as Row[]
   const byDay = new Map<string, Row[]>()
@@ -58,15 +74,15 @@ export default async function Bookings({
   const staffMap = new Map((staff ?? []).map((s, i) => [s.id, { ...s, color: COLORS[i % COLORS.length] }]))
   const weekEnd = addDays(today, 7)
   const weekRevenue = all
-    .filter((r) => fmtTz(r.starts_at, tz, 'yyyy-MM-dd') < weekEnd)
+    .filter((r) => r.status === 'confirmed' && fmtTz(r.starts_at, tz, 'yyyy-MM-dd') < weekEnd)
     .reduce((a, r) => a + (r.price_sek ?? 0), 0)
-  const nextUp = all.find((r) => Date.parse(r.starts_at) > Date.now())
+  const nextUp = all.find((r) => r.status === 'confirmed' && Date.parse(r.starts_at) > Date.now())
   const link = `${await origin()}/${salon.slug}`
   const [, m, dd] = day.split('-').map(Number)
 
   return (
     <div>
-      <Flash e={sp.e} ok={sp.ok ? 'Bokningen är inlagd ✓' : undefined} />
+      <Flash e={sp.e} ok={sp.ok === '2' ? 'Tiden är blockerad ✓' : sp.ok ? 'Bokningen är inlagd ✓' : undefined} />
 
       {sp.welcome && (
         <div className="card rise mb-6 p-5">
@@ -111,6 +127,7 @@ export default async function Bookings({
                 <span className={`text-[11px] font-medium uppercase ${on ? '' : 'text-mute'}`}>{WEEKDAYS[weekdayOf(d)]}</span>
                 <span className="text-lg font-bold">{Number(d.slice(8))}</span>
                 {n > 0 && <span className={`absolute bottom-2 h-1.5 w-1.5 rounded-full ${on ? 'bg-ongold' : 'bg-gold'}`} />}
+                {offDays.has(d) && <span className={`absolute right-2 top-2 h-1.5 w-1.5 rounded-full ${on ? 'bg-ongold/50' : 'bg-mute'}`} />}
               </Link>
             )
           })}
@@ -118,6 +135,23 @@ export default async function Bookings({
       </section>
 
       <section className="mt-5">
+        {offToday.length > 0 && (
+          <div className="mb-2.5 grid gap-2">
+            {offToday.map((o) => (
+              <div key={o.id} className="flex items-center gap-3 rounded-[24px] px-4 py-3" style={{ background: 'repeating-linear-gradient(135deg, color-mix(in srgb, rgb(var(--fg)) 5%, rgb(var(--ink))) 0 10px, color-mix(in srgb, rgb(var(--fg)) 8%, rgb(var(--ink))) 10px 20px)' }}>
+                <Ban size={18} className="text-mute" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold">{o.reason || 'Blockerad tid'} · {o.staff_id ? staffMap.get(o.staff_id)?.name ?? '' : 'Hela salongen'}</div>
+                  <div className="text-xs text-mute">{fmtTz(o.starts_at, tz, 'd/M HH:mm')} – {fmtTz(o.ends_at, tz, 'd/M HH:mm')}</div>
+                </div>
+                <form action={deleteTimeOff}>
+                  <input type="hidden" name="id" value={o.id} />
+                  <button className="icon-btn !h-9 !w-9" aria-label="Ta bort blockering"><X size={15} /></button>
+                </form>
+              </div>
+            ))}
+          </div>
+        )}
         {list.length === 0 ? (
           <div className="card rise px-6 py-12 text-center">
             <p className="font-medium">Inga bokningar</p>
@@ -128,8 +162,9 @@ export default async function Bookings({
             {list.map((r, i) => {
               const s = staffMap.get(r.staff_id)
               const done = Date.parse(r.ends_at) < Date.now()
+              const noShow = r.status === 'no_show'
               return (
-                <div key={r.id} className={`card rise flex items-center gap-3 p-3 pr-3.5 ${done ? 'opacity-50' : ''}`} style={{ animationDelay: `${i * 0.03}s` }}>
+                <div key={r.id} className={`card rise flex items-center gap-3 p-3 pr-3.5 ${done && !noShow ? 'opacity-60' : ''}`} style={{ animationDelay: `${i * 0.03}s` }}>
                   <div className="w-1 self-stretch rounded-full" style={{ background: s?.color ?? '#888' }} />
                   <div className="w-[52px] text-center">
                     <div className="text-[17px] font-bold leading-tight">{fmtTz(r.starts_at, tz, 'HH:mm')}</div>
@@ -138,6 +173,7 @@ export default async function Bookings({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 truncate font-semibold">
                       {r.customer_name}
+                      {noShow && <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-medium text-red-400">Utebliven</span>}
                       {r.source === 'manual' && <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-mute" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 7%, rgb(var(--ink)))' }}>DM</span>}
                     </div>
                     <div className="truncate text-sm text-mute">
@@ -149,10 +185,18 @@ export default async function Bookings({
                   {r.customer_phone && (
                     <a href={`tel:${r.customer_phone}`} className="icon-btn !h-10 !w-10" aria-label="Ring"><Phone size={16} /></a>
                   )}
-                  <form action={cancelBooking}>
-                    <input type="hidden" name="id" value={r.id} />
-                    <button className="icon-btn !h-10 !w-10 text-red-400" aria-label="Avboka"><X size={16} /></button>
-                  </form>
+                  {done ? (
+                    <form action={toggleNoShow}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <input type="hidden" name="status" value={r.status} />
+                      <button className={`icon-btn !h-10 !w-10 ${noShow ? '!bg-red-500/20 text-red-400' : ''}`} aria-label="Utebliven" title={noShow ? 'Ångra utebliven' : 'Markera utebliven'}><UserX size={16} /></button>
+                    </form>
+                  ) : (
+                    <form action={cancelBooking}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <button className="icon-btn !h-10 !w-10 text-red-400" aria-label="Avboka"><X size={16} /></button>
+                    </form>
+                  )}
                 </div>
               )
             })}
@@ -160,7 +204,8 @@ export default async function Bookings({
         )}
       </section>
 
-      <Sheet title="Ny bokning" defaultOpen={!!sp.e}>
+      <Sheet title="Lägg till" defaultOpen={!!sp.e}>
+        <Tabs labels={['Bokning', 'Blockera tid']}>
         <form action={addManualBooking} className="grid grid-cols-2 gap-3">
           <input className="input col-span-2" name="name" required placeholder="Kundens namn" />
           <input className="input col-span-2" name="phone" type="tel" placeholder="Telefon (valfritt)" />
@@ -191,6 +236,36 @@ export default async function Bookings({
           <input className="input col-span-2" name="note" placeholder="Anteckning (valfritt)" />
           <SubmitButton className="btn-gold col-span-2 mt-1" pending="Sparar…">Spara bokning</SubmitButton>
         </form>
+        <form action={addTimeOff} className="grid grid-cols-2 gap-3">
+          <div className="col-span-2">
+            <label className="label">Vem</label>
+            <select className="input" name="staff_id">
+              <option value="all">Hela salongen (stängt)</option>
+              {(staff ?? []).map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Från datum</label>
+            <input className="input" type="date" name="from_date" defaultValue={day} required />
+          </div>
+          <div>
+            <label className="label">Från tid</label>
+            <input className="input" type="time" name="from_time" defaultValue="12:00" step={300} />
+          </div>
+          <div>
+            <label className="label">Till datum</label>
+            <input className="input" type="date" name="to_date" defaultValue={day} />
+          </div>
+          <div>
+            <label className="label">Till tid</label>
+            <input className="input" type="time" name="to_time" defaultValue="13:00" step={300} />
+          </div>
+          <input className="input col-span-2" name="reason" placeholder="Orsak, t.ex. Lunch, Semester, Sjuk" />
+          <SubmitButton className="btn-gold col-span-2 mt-1" pending="Sparar…">Blockera tid</SubmitButton>
+        </form>
+        </Tabs>
       </Sheet>
     </div>
   )

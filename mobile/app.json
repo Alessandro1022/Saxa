@@ -2,7 +2,7 @@
   "expo": {
     "name": "Saxa",
     "slug": "saxa",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "saxa",
@@ -12,7 +12,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "se.aetossystems.saxa",
       "buildNumber": "1",
-      "config": { "usesNonExemptEncryption": false },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Saxa använder dina bilder så att du kan lägga upp profil- och salongsbilder.",
@@ -34,6 +36,13 @@
           "imageWidth": 240,
           "resizeMode": "contain",
           "backgroundColor": "#09090b"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#d2ab5c"
         }
       ]
     ],

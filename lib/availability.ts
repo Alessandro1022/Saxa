@@ -1,49 +1,69 @@
 import { admin } from './supabase/admin'
-import { addDays, computeSlots, zoned, type Hours, type Busy } from './time'
+import { addDays, computeSlots, todayIn, zoned, type Hours, type Busy, type Slot } from './time'
 
 export const MAX_DAYS_AHEAD = 60
 
-export async function getAvailability(salonId: string, serviceId: string, staffId: string, date: string) {
-  const db = admin()
-  const { data: salon } = await db.from('salons').select('id, timezone').eq('id', salonId).single()
-  if (!salon) return null
-  const { data: service } = await db
-    .from('services')
-    .select('id, name, duration_min, price_sek')
-    .eq('id', serviceId)
-    .eq('salon_id', salonId)
-    .eq('active', true)
-    .single()
-  if (!service) return null
+type Opts = { days?: number; excludeBookingId?: string }
 
-  let q = db.from('staff').select('id').eq('salon_id', salonId).eq('active', true)
+/**
+ * Lediga tider för en tjänst hos en frisör (eller 'any') från `date` och `days` dagar framåt.
+ * Hämtar allt i ett svep och räknar per dag. Tar hänsyn till bokningar, ledighet och framförhållning.
+ */
+export async function getAvailabilityRange(salonId: string, serviceId: string, staffId: string, date: string, opts: Opts = {}) {
+  const days = Math.max(1, Math.min(opts.days ?? 1, 31))
+  const db = admin()
+  const [{ data: salon }, { data: service }] = await Promise.all([
+    db.from('salons').select('*').eq('id', salonId).single(),
+    db.from('services').select('id, name, duration_min, price_sek').eq('id', serviceId).eq('salon_id', salonId).eq('active', true).single(),
+  ])
+  if (!salon || !service) return null
+
+  let q = db.from('staff').select('id').eq('salon_id', salonId).eq('active', true).order('sort')
   if (staffId !== 'any') q = q.eq('id', staffId)
   const { data: staff } = await q
   const ids = (staff ?? []).map((s) => s.id as string)
-  if (!ids.length) return { salon, service, slots: [] }
-
   const tz = salon.timezone as string
-  const dayStart = zoned(date, '00:00', tz).toISOString()
-  const dayEnd = zoned(addDays(date, 1), '00:00', tz).toISOString()
+  if (date === 'today') date = todayIn(tz)
+  const leadMin = (salon.lead_minutes as number | undefined) ?? 30
+  if (!ids.length) return { salon, service, from: date, byDay: {} as Record<string, Slot[]> }
 
-  const [{ data: hours }, { data: busy }] = await Promise.all([
+  const rangeStart = zoned(date, '00:00', tz).toISOString()
+  const rangeEnd = zoned(addDays(date, days), '00:00', tz).toISOString()
+
+  let bq = db.from('bookings').select('id, staff_id, starts_at, ends_at').in('staff_id', ids).eq('status', 'confirmed').lt('starts_at', rangeEnd).gt('ends_at', rangeStart)
+  if (opts.excludeBookingId) bq = bq.neq('id', opts.excludeBookingId)
+
+  const [{ data: hours }, { data: busy }, off] = await Promise.all([
     db.from('staff_hours').select('staff_id, weekday, start_time, end_time').in('staff_id', ids),
-    db
-      .from('bookings')
-      .select('staff_id, starts_at, ends_at')
-      .in('staff_id', ids)
-      .eq('status', 'confirmed')
-      .lt('starts_at', dayEnd)
-      .gt('ends_at', dayStart),
+    bq,
+    db.from('time_off').select('staff_id, starts_at, ends_at').eq('salon_id', salonId).lt('starts_at', rangeEnd).gt('ends_at', rangeStart),
   ])
 
-  const slots = computeSlots({
-    date,
-    tz,
-    duration: service.duration_min as number,
-    staffIds: ids,
-    hours: (hours ?? []) as Hours[],
-    busy: (busy ?? []) as Busy[],
-  })
-  return { salon, service, slots }
+  // Ledighet blir "upptaget" – för en frisör eller för alla (staff_id null)
+  const blocked: Busy[] = []
+  for (const t of (off.data ?? []) as { staff_id: string | null; starts_at: string; ends_at: string }[]) {
+    for (const id of t.staff_id ? [t.staff_id] : ids) blocked.push({ staff_id: id, starts_at: t.starts_at, ends_at: t.ends_at })
+  }
+  const allBusy = [...((busy ?? []) as Busy[]), ...blocked]
+
+  const byDay: Record<string, Slot[]> = {}
+  for (let i = 0; i < days; i++) {
+    const d = addDays(date, i)
+    byDay[d] = computeSlots({
+      date: d,
+      tz,
+      duration: service.duration_min as number,
+      staffIds: ids,
+      hours: (hours ?? []) as Hours[],
+      busy: allBusy,
+      leadMin,
+    })
+  }
+  return { salon, service, from: date, byDay }
+}
+
+export async function getAvailability(salonId: string, serviceId: string, staffId: string, date: string, opts: Opts = {}) {
+  const r = await getAvailabilityRange(salonId, serviceId, staffId, date, { ...opts, days: 1 })
+  if (!r) return null
+  return { salon: r.salon, service: r.service, slots: r.byDay[date] ?? [] }
 }

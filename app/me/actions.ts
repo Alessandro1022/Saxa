@@ -4,6 +4,8 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { admin } from '@/lib/supabase/admin'
+import { canChange, notifyBooking } from '@/lib/notify'
+import { origin } from '@/lib/salon'
 
 async function uid() {
   const supabase = await createClient()
@@ -16,12 +18,14 @@ async function uid() {
 
 export async function cancelMyBooking(f: FormData) {
   const id = await uid()
-  await admin()
-    .from('bookings')
-    .update({ status: 'cancelled' })
-    .eq('id', String(f.get('id')))
-    .eq('customer_id', id)
-    .gt('starts_at', new Date().toISOString())
+  const db = admin()
+  const { data: bk } = await db.from('bookings').select('id, starts_at, status, customer_id, salons(*)').eq('id', String(f.get('id'))).single()
+  const s = bk?.salons as unknown as { cancel_hours?: number } | undefined
+  if (!bk || bk.customer_id !== id || bk.status !== 'confirmed' || !canChange(bk.starts_at, s?.cancel_hours)) {
+    redirect('/me?e=' + encodeURIComponent(`Avbokning går bara senast ${s?.cancel_hours ?? 2} h innan – ring salongen.`))
+  }
+  await db.from('bookings').update({ status: 'cancelled' }).eq('id', bk.id)
+  await notifyBooking(bk.id, 'cancelled', await origin())
   revalidatePath('/me')
 }
 

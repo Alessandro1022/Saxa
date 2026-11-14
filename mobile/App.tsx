@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Image, Linking, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native'
 import { WebView, type WebViewNavigation } from 'react-native-webview'
 import type { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes'
@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import * as Haptics from 'expo-haptics'
 import { StatusBar } from 'expo-status-bar'
 import Constants from 'expo-constants'
+import { onReminderTap, syncReminder } from './reminders'
 
 const SITE = ((Constants.expoConfig?.extra?.siteUrl as string | undefined) ?? 'https://saxa1001.vercel.app').replace(/\/$/, '')
 const GOLD = '#d2ab5c'
@@ -29,6 +30,10 @@ export default function App() {
   const [failed, setFailed] = useState(false)
   const [ready, setReady] = useState(false)
   const lastPath = useRef('')
+  const [uri, setUri] = useState(SITE)
+
+  // Tryck på en påminnelse öppnar bokningen
+  useEffect(() => onReminderTap((url) => url.startsWith(SITE) && setUri(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now())), [])
 
   const hideSplash = useCallback(() => {
     setReady(true)
@@ -44,8 +49,11 @@ export default function App() {
   const onNav = useCallback((nav: WebViewNavigation) => {
     const path = nav.url.replace(SITE, '')
     // Liten vibration när en bokning blir klar
-    if (path.startsWith('/b/') && !lastPath.current.startsWith('/b/')) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
+    const m = path.match(/^\/b\/([0-9a-f-]{36})/i)
+    if (m) {
+      if (!lastPath.current.startsWith('/b/')) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {})
+      // Påminnelse dagen innan + 2 h innan (eller ta bort om avbokad)
+      syncReminder(SITE, m[1])
     }
     lastPath.current = path
   }, [])
@@ -73,7 +81,7 @@ export default function App() {
       ) : (
         <Web
           ref={ref}
-          source={{ uri: SITE }}
+          source={{ uri }}
           style={{ backgroundColor: bg }}
           originWhitelist={['*']}
           applicationNameForUserAgent="SaxaApp/1.0"

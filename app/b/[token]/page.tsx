@@ -1,10 +1,12 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { CalendarPlus, Check, X } from 'lucide-react'
+import { CalendarClock, CalendarPlus, Check, Phone, X } from 'lucide-react'
 import { admin } from '@/lib/supabase/admin'
 import { getMe } from '@/lib/user'
 import { fmtTz, prettyDate } from '@/lib/time'
 import { Avatar } from '@/components/ui'
+import { canChange, notifyBooking } from '@/lib/notify'
+import { origin } from '@/lib/salon'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,28 +16,35 @@ async function cancel(formData: FormData) {
   'use server'
   const token = String(formData.get('token'))
   if (!uuid.test(token)) return
-  await admin().from('bookings').update({ status: 'cancelled' }).eq('cancel_token', token).gt('starts_at', new Date().toISOString())
+  const db = admin()
+  const { data: bk } = await db.from('bookings').select('id, starts_at, status, salons(*)').eq('cancel_token', token).single()
+  const s = bk?.salons as unknown as { cancel_hours?: number } | undefined
+  if (!bk || bk.status !== 'confirmed' || !canChange(bk.starts_at, s?.cancel_hours)) redirect(`/b/${token}`)
+  await db.from('bookings').update({ status: 'cancelled' }).eq('id', bk.id)
+  await notifyBooking(bk.id, 'cancelled', await origin())
   redirect(`/b/${token}`)
 }
 
-export default async function BookingPage({ params }: { params: Promise<{ token: string }> }) {
+export default async function BookingPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ flyttad?: string }> }) {
   const { token } = await params
+  const { flyttad } = await searchParams
   if (!uuid.test(token)) notFound()
   const [{ data: b }, me] = await Promise.all([
     admin()
       .from('bookings')
-      .select('starts_at, ends_at, service_name, price_sek, customer_name, status, salons(name, slug, address, timezone, logo_url), staff(name, photo_url)')
+      .select('starts_at, ends_at, service_name, price_sek, customer_name, status, salons(*), staff(name, photo_url)')
       .eq('cancel_token', token)
       .single(),
     getMe(),
   ])
   if (!b) notFound()
 
-  const salon = b.salons as unknown as { name: string; slug: string; address: string | null; timezone: string; logo_url: string | null }
+  const salon = b.salons as unknown as { name: string; slug: string; address: string | null; timezone: string; logo_url: string | null; phone: string | null; cancel_hours?: number }
   const staff = b.staff as unknown as { name: string; photo_url: string | null }
   const date = fmtTz(b.starts_at, salon.timezone, 'yyyy-MM-dd')
   const cancelled = b.status === 'cancelled'
   const past = Date.parse(b.starts_at) < Date.now()
+  const changeable = !cancelled && b.status === 'confirmed' && canChange(b.starts_at, salon.cancel_hours)
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 py-12">
@@ -46,7 +55,7 @@ export default async function BookingPage({ params }: { params: Promise<{ token:
         >
           {cancelled ? <X size={40} /> : <Check size={44} strokeWidth={3} />}
         </div>
-        <h1 className="mt-6 text-[30px] font-bold tracking-tight">{cancelled ? 'Avbokad' : 'Du är bokad!'}</h1>
+        <h1 className="mt-6 text-[30px] font-bold tracking-tight">{cancelled ? 'Avbokad' : flyttad ? 'Tiden är flyttad!' : 'Du är bokad!'}</h1>
         <p className="mt-1 text-mute">{cancelled ? 'Tiden är nu ledig för andra.' : `Vi ses, ${b.customer_name.split(' ')[0]} ✂️`}</p>
       </div>
 
@@ -78,13 +87,26 @@ export default async function BookingPage({ params }: { params: Promise<{ token:
 
       <div className="rise rise-2 mt-6 grid gap-3">
         {!cancelled && !past && (
-          <>
-            <a href={`/api/booking-ics/${token}`} className="btn-gold"><CalendarPlus size={18} /> Lägg i kalendern</a>
+          <a href={`/api/booking-ics/${token}`} className="btn-gold"><CalendarPlus size={18} /> Lägg i kalendern</a>
+        )}
+        {changeable ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Link href={`/${salon.slug}?omboka=${token}#boka`} className="btn-soft"><CalendarClock size={17} /> Flytta tid</Link>
             <form action={cancel}>
               <input type="hidden" name="token" value={token} />
-              <button className="btn w-full text-red-400 hover:bg-red-500/10">Avboka</button>
+              <button className="btn-soft w-full text-red-400">Avboka</button>
             </form>
-          </>
+          </div>
+        ) : (
+          !cancelled &&
+          !past && (
+            <p className="text-center text-sm text-mute">
+              Ändringar går att göra senast {salon.cancel_hours ?? 2} h innan.
+              {salon.phone && (
+                <a href={`tel:${salon.phone}`} className="ml-1 inline-flex items-center gap-1 font-medium text-gold"><Phone size={13} /> Ring salongen</a>
+              )}
+            </p>
+          )
         )}
         {me ? (
           <Link href="/me" className="btn-soft">Mina bokningar</Link>
