@@ -29,6 +29,7 @@
       }
     },
     "plugins": [
+      "expo-router",
       [
         "expo-splash-screen",
         {
@@ -48,6 +49,9 @@
     ],
     "extra": {
       "siteUrl": "https://saxa1001.vercel.app"
+    },
+    "experiments": {
+      "typedRoutes": false
     }
   }
 }

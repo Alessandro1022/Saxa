@@ -30,7 +30,13 @@ export async function getAvailabilityRange(salonId: string, serviceId: string, s
   const rangeStart = zoned(date, '00:00', tz).toISOString()
   const rangeEnd = zoned(addDays(date, days), '00:00', tz).toISOString()
 
-  let bq = db.from('bookings').select('id, staff_id, starts_at, ends_at').in('staff_id', ids).eq('status', 'confirmed').lt('starts_at', rangeEnd).gt('ends_at', rangeStart)
+  let bq = db
+    .from('bookings')
+    .select('id, staff_id, starts_at, ends_at, status, created_at')
+    .in('staff_id', ids)
+    .in('status', ['confirmed', 'pending'])
+    .lt('starts_at', rangeEnd)
+    .gt('ends_at', rangeStart)
   if (opts.excludeBookingId) bq = bq.neq('id', opts.excludeBookingId)
 
   const [{ data: hours }, { data: busy }, off] = await Promise.all([
@@ -44,7 +50,12 @@ export async function getAvailabilityRange(salonId: string, serviceId: string, s
   for (const t of (off.data ?? []) as { staff_id: string | null; starts_at: string; ends_at: string }[]) {
     for (const id of t.staff_id ? [t.staff_id] : ids) blocked.push({ staff_id: id, starts_at: t.starts_at, ends_at: t.ends_at })
   }
-  const allBusy = [...((busy ?? []) as Busy[]), ...blocked]
+  // Tider som hålls för betalning räknas som upptagna i 35 min
+  const staleBefore = Date.now() - 35 * 60000
+  const live = ((busy ?? []) as (Busy & { status: string; created_at: string })[]).filter(
+    (b) => b.status === 'confirmed' || Date.parse(b.created_at) > staleBefore
+  )
+  const allBusy = [...live, ...blocked]
 
   const byDay: Record<string, Slot[]> = {}
   for (let i = 0; i < days; i++) {

@@ -118,3 +118,6 @@ body::after {
 .float { animation: float 6s ease-in-out infinite; }
 .float-slow { animation: float 8s ease-in-out infinite; animation-delay: -2s; }
 @media (prefers-reduced-motion: reduce) { .float, .float-slow, .rise, .sheet { animation: none !important; } }
+
+/* I iOS-appen sköts navigering native */
+.in-app .web-only { display: none !important; }

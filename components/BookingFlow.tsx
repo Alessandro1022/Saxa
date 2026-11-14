@@ -32,6 +32,8 @@ export default function BookingFlow({
   initialStaff,
   me,
   reschedule,
+  pay,
+  notice,
 }: {
   salonId: string
   tz: string
@@ -40,6 +42,8 @@ export default function BookingFlow({
   initialStaff?: string
   me: { name: string; phone: string; email: string } | null
   reschedule?: { token: string; serviceId: string; staffId: string; bookingId: string }
+  pay?: { mode: 'none' | 'deposit' | 'full'; deposit: number }
+  notice?: string
 }) {
   const router = useRouter()
   const startService = reschedule ? services.find((s) => s.id === reschedule.serviceId) : services.length === 1 ? services[0] : undefined
@@ -54,7 +58,7 @@ export default function BookingFlow({
   const [form, setForm] = useState<Details>({ name: me?.name ?? '', phone: me?.phone ?? '', email: me?.email ?? '', note: '' })
   const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(notice ?? '')
 
   // Kom ihåg gästens uppgifter från förra bokningen
   useEffect(() => {
@@ -134,6 +138,10 @@ export default function BookingFlow({
           localStorage.setItem(GUEST_KEY, JSON.stringify({ name: form.name, phone: form.phone, email: form.email }))
         } catch {}
       }
+      if (d.checkoutUrl) {
+        window.location.href = d.checkoutUrl // Stripe: kort, Apple Pay, Swish
+        return
+      }
       router.push(`/b/${d.token}${reschedule ? '?flyttad=1' : ''}`)
     } catch {
       setError('Kunde inte nå servern')
@@ -144,6 +152,8 @@ export default function BookingFlow({
   const [, mo] = date.split('-').map(Number)
   const dayLabel = (d: string) =>
     d === today ? 'Idag' : d === addDays(today, 1) ? 'Imorgon' : `${WEEKDAYS[weekdayOf(d)]} ${Number(d.slice(8))}/${Number(d.slice(5, 7))}`
+  const p = service?.price_sek ?? 0
+  const payNow = !reschedule && pay && pay.mode !== 'none' ? (pay.mode === 'full' ? p : Math.min(pay.deposit, p || pay.deposit)) : 0
   const titles = reschedule ? ['', 'Välj ny tid', 'Bekräfta ny tid'] : ['Välj tjänst', 'Välj tid', 'Bekräfta']
   const canBack = step === 3 || (step === 2 && !startService && !reschedule)
 
@@ -317,11 +327,19 @@ export default function BookingFlow({
                 </div>
               ))}
 
+            {payNow >= 5 && (
+              <div className="flex items-center justify-between rounded-[20px] px-4 py-3 text-sm" style={soft(4.5)}>
+                <span className="text-mute">{pay?.mode === 'full' ? 'Betalas nu' : 'Handpenning nu'} · kort, Apple Pay eller Swish</span>
+                <span className="font-bold">{payNow} kr</span>
+              </div>
+            )}
             <button className="btn-gold mt-1 !py-4 text-base" disabled={busy}>
               {busy ? (
-                <><Loader2 size={18} className="animate-spin" /> {reschedule ? 'Flyttar…' : 'Bokar…'}</>
+                <><Loader2 size={18} className="animate-spin" /> {reschedule ? 'Flyttar…' : payNow >= 5 ? 'Öppnar betalning…' : 'Bokar…'}</>
               ) : reschedule ? (
                 'Flytta till den här tiden'
+              ) : payNow >= 5 ? (
+                `Betala ${payNow} kr och boka`
               ) : (
                 'Bekräfta bokning'
               )}

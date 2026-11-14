@@ -4,6 +4,7 @@ import { unstable_cache } from 'next/cache'
 import type { Metadata } from 'next'
 import { ArrowLeft, MapPin, Phone, Star } from 'lucide-react'
 import { admin } from '@/lib/supabase/admin'
+import { payCfg } from '@/lib/stripe'
 import { getMe } from '@/lib/user'
 import BookingFlow from '@/components/BookingFlow'
 import ThemeToggle from '@/components/ThemeToggle'
@@ -19,7 +20,7 @@ async function _load(slug: string) {
   const db = admin()
   const { data: salon } = await db
     .from('salons')
-    .select('id, slug, name, description, address, city, phone, instagram, logo_url, cover_url, timezone')
+    .select('*')
     .eq('slug', slug)
     .single()
   if (!salon) return null
@@ -56,7 +57,7 @@ export default async function SalonPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ staff?: string; omboka?: string }>
+  searchParams: Promise<{ staff?: string; omboka?: string; betalning?: string }>
 }) {
   const [data, me, sp] = await Promise.all([load((await params).slug), getMe(), searchParams])
   if (!data) notFound()
@@ -77,8 +78,8 @@ export default async function SalonPage({
         <Cover src={salon.cover_url} icon={56} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[rgb(var(--ink))]" />
         <div className="absolute inset-x-5 top-[max(env(safe-area-inset-top),16px)] flex justify-between">
-          <Link href="/frisorer" className="icon-btn !bg-black/30 text-white backdrop-blur-md" aria-label="Tillbaka"><ArrowLeft size={18} /></Link>
-          <ThemeToggle className="!bg-black/30 text-white backdrop-blur-md" />
+          <Link href="/frisorer" className="web-only icon-btn !bg-black/30 text-white backdrop-blur-md" aria-label="Tillbaka"><ArrowLeft size={18} /></Link>
+          <ThemeToggle className="web-only !bg-black/30 text-white backdrop-blur-md" />
         </div>
       </header>
 
@@ -131,6 +132,8 @@ export default async function SalonPage({
             initialStaff={staff.some((s) => s.id === sp.staff) ? sp.staff : undefined}
             me={me ? { name: me.full_name ?? '', phone: me.phone ?? '', email: me.email } : null}
             reschedule={reschedule}
+            pay={payCfg(salon)}
+            notice={sp.betalning === 'avbruten' ? 'Betalningen avbröts – tiden är släppt. Välj en tid igen.' : undefined}
           />
         ) : (
           <p className="card mx-5 mt-8 p-6 text-center text-mute">Salongen har inte öppnat onlinebokningen än.</p>

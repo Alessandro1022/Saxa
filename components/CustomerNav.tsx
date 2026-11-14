@@ -14,7 +14,7 @@ const TABS = [
 export default function CustomerNav() {
   const path = usePathname()
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-5 pb-[max(env(safe-area-inset-bottom),16px)]">
+    <nav className="web-only fixed inset-x-0 bottom-0 z-30 flex justify-center px-5 pb-[max(env(safe-area-inset-bottom),16px)]">
       <div className="glass flex gap-1 rounded-full p-1.5">
         {TABS.map(({ href, label, Icon }) => {
           const on = path === href

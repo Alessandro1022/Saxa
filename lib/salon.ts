@@ -19,6 +19,10 @@ export type Salon = {
   cancel_hours?: number
   lead_minutes?: number
   notify_email?: string | null
+  stripe_account_id?: string | null
+  payments_ready?: boolean
+  pay_mode?: 'none' | 'deposit' | 'full'
+  deposit_sek?: number
 }
 
 export const requireSalon = cache(async () => {

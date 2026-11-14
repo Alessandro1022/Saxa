@@ -24,6 +24,8 @@ type Row = {
   source: string
   staff_id: string
   status: string
+  payment_status?: string | null
+  paid_sek?: number | null
 }
 
 export default async function Bookings({
@@ -45,7 +47,7 @@ export default async function Bookings({
     supabase.from('services').select('id, name, duration_min').eq('salon_id', salon.id).eq('active', true).order('sort'),
     supabase
       .from('bookings')
-      .select('id, starts_at, ends_at, service_name, price_sek, customer_name, customer_phone, note, source, staff_id, status')
+      .select('*')
       .eq('salon_id', salon.id)
       .in('status', ['confirmed', 'no_show'])
       .gte('starts_at', rangeStart)
@@ -173,6 +175,7 @@ export default async function Bookings({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 truncate font-semibold">
                       {r.customer_name}
+                      {r.payment_status === 'paid' && <span className="rounded-full bg-gold-soft px-2 py-0.5 text-[10px] font-medium text-gold">Betald {r.paid_sek} kr</span>}
                       {noShow && <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-medium text-red-400">Utebliven</span>}
                       {r.source === 'manual' && <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-mute" style={{ background: 'color-mix(in srgb, rgb(var(--fg)) 7%, rgb(var(--ink)))' }}>DM</span>}
                     </div>

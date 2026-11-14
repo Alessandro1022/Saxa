@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { admin } from '@/lib/supabase/admin'
 import { canChange, notifyBooking } from '@/lib/notify'
+import { refundIfPaid } from '@/lib/stripe'
 import { origin } from '@/lib/salon'
 
 async function uid() {
@@ -25,6 +26,7 @@ export async function cancelMyBooking(f: FormData) {
     redirect('/me?e=' + encodeURIComponent(`Avbokning går bara senast ${s?.cancel_hours ?? 2} h innan – ring salongen.`))
   }
   await db.from('bookings').update({ status: 'cancelled' }).eq('id', bk.id)
+  await refundIfPaid(bk.id)
   await notifyBooking(bk.id, 'cancelled', await origin())
   revalidatePath('/me')
 }
