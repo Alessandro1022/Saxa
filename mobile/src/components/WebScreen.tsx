@@ -27,7 +27,7 @@ function isExternal(url: string) {
 
 // Säger till sajten att den visas i appen (döljer webbens egen meny m.m.)
 const inject = (push: string | null) =>
-  `document.documentElement.classList.add('in-app');window.__SAXA_APP__=true;${push ? `window.__SAXA_PUSH__=${JSON.stringify(push)};` : ''}true;`
+  `window.__SAXA_APP__=true;${push ? `window.__SAXA_PUSH__=${JSON.stringify(push)};` : ''}try{document.documentElement.classList.add('in-app')}catch(e){}true;`
 
 /** En flik/sida i appen som visar en del av Saxa-sajten med native-beteenden runt om. */
 export default function WebScreen({ path, onReady, tabRoots }: { path: string; onReady?: () => void; tabRoots?: boolean }) {

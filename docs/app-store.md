@@ -42,7 +42,7 @@ frisör,barber,boka,klippning,fade,salong,skägg,tidsbokning,hår,barbershop,fri
 Snabbare bokning på tre tryck, närmast lediga tider, påminnelser, flytta tid själv och mycket mer.
 
 ## Skärmdumpar
-iPhone 6,9" (1290 × 2796): `docs/saxa-appstore-1.png` … `-4.png` – dra in alla fyra i den ordningen.
+iPhone 6,9" (1290 × 2796): `docs/saxa-1.png` … `saxa-4.png` – dra in alla fyra i den ordningen.
 
 ## App Review – information till granskaren
 - **Inloggning krävs:** Nej (bokning fungerar utan konto). Fyll ändå i ett demokonto:
