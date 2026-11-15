@@ -163,6 +163,12 @@ export default async function SalonPage({
                     </div>
                   </div>
                   {r.comment && <p className="mt-3 line-clamp-4 text-sm leading-relaxed">{r.comment}</p>}
+                  <a
+                    href={`mailto:wehelie@aetossystems.se?subject=${encodeURIComponent(`Rapportera omdöme ${r.id}`)}&body=${encodeURIComponent(`Jag vill rapportera ett omdöme hos ${salon.name}.\n\nOrsak: `)}`}
+                    className="mt-3 inline-block text-[11px] text-mute underline-offset-2 hover:underline"
+                  >
+                    Rapportera
+                  </a>
                 </div>
               )
             })}

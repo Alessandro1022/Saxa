@@ -8,6 +8,7 @@ const FAQ = [
   ['Hur avbokar jag?', 'Öppna länken i din bokningsbekräftelse, eller gå till Bokningar i appen och tryck på krysset.'],
   ['Behöver jag ett konto för att boka?', 'Nej. Namn, telefon och e-post räcker. Med konto samlas alla dina bokningar på ett ställe.'],
   ['Hur raderar jag mitt konto?', 'Gå till Profil → Radera konto. Allt raderas direkt.'],
+  ['Hur rapporterar jag ett olämpligt omdöme?', 'Tryck på Rapportera under omdömet eller mejla oss. Vi granskar inom 24 timmar och tar bort omdömen som bryter mot reglerna.'],
   ['Jag driver en salong – hur kommer jag igång?', 'Gå till Logga in → Salong → Skapa konto. Du är bokningsbar på en minut.'],
 ]
 
