@@ -27,7 +27,7 @@ function isExternal(url: string) {
 
 // Säger till sajten att den visas i appen (döljer webbens egen meny m.m.)
 const inject = (push: string | null) =>
-  `window.__SAXA_APP__=true;${push ? `window.__SAXA_PUSH__=${JSON.stringify(push)};` : ''}try{document.documentElement.classList.add('in-app')}catch(e){}true;`
+  `window.__SAXA_APP__=true;${push ? `window.__SAXA_PUSH__=${JSON.stringify(push)};` : ''}true;`
 
 /** En flik/sida i appen som visar en del av Saxa-sajten med native-beteenden runt om. */
 export default function WebScreen({ path, onReady, tabRoots }: { path: string; onReady?: () => void; tabRoots?: boolean }) {
@@ -117,7 +117,7 @@ export default function WebScreen({ path, onReady, tabRoots }: { path: string; o
         source={{ uri: SITE + path }}
         style={{ backgroundColor: c.bg }}
         originWhitelist={['*']}
-        applicationNameForUserAgent="SaxaApp/1.1"
+        applicationNameForUserAgent="SaxaApp/1.3"
         injectedJavaScriptBeforeContentLoaded={inject(push)}
         onShouldStartLoadWithRequest={onShouldStart}
         onNavigationStateChange={onNav}
