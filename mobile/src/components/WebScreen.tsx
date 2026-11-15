@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, Linking, Pressable, StyleSheet, Text, View, u
 import { WebView, type WebViewNavigation } from 'react-native-webview'
 import type { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes'
 import * as Haptics from 'expo-haptics'
-import { router } from 'expo-router'
+import { router, useFocusEffect } from 'expo-router'
 import { GOLD, SITE, palette } from '../lib/config'
 import { syncReminder } from '../lib/reminders'
 import { currentPushToken, ensurePush, onPushToken } from '../lib/push'
@@ -48,6 +48,16 @@ export default function WebScreen({ path, onReady, tabRoots }: { path: string; o
   const [failed, setFailed] = useState(false)
   const [ready, setReady] = useState(false)
   const lastPath = useRef('')
+
+  // Flikar: hämta färskt innehåll när man kommer tillbaka till fliken (t.ex. efter inloggning eller ny bokning)
+  const seen = useRef(false)
+  useFocusEffect(
+    useCallback(() => {
+      if (!tabRoots || !path.startsWith('/me')) return // inte Hem – där kan en bokning vara på gång
+      if (seen.current) ref.current?.injectJavaScript('window.location.reload();true;')
+      seen.current = true
+    }, [tabRoots, path])
+  )
 
   const onShouldStart = useCallback(
     (req: ShouldStartLoadRequest) => {
