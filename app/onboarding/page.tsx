@@ -13,7 +13,7 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
   const { e } = await searchParams
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-10">
+    <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 pb-10 pt-[max(env(safe-area-inset-top),40px)]">
       <div className="rise">
         <Logo size={52} />
         <h1 className="mt-6 text-3xl font-bold tracking-tight">Skapa din salong</h1>

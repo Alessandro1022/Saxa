@@ -53,7 +53,7 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
   const changeable = b.status === 'confirmed' && canChange(b.starts_at, salon.cancel_hours)
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 py-12">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-12 pt-[max(calc(env(safe-area-inset-top)+16px),48px)]">
       <div className="rise text-center">
         <div
           className={`mx-auto flex h-24 w-24 items-center justify-center rounded-full ${cancelled ? 'bg-red-500/15 text-red-400' : 'text-ongold'}`}

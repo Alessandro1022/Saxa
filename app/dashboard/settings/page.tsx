@@ -17,7 +17,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
   const db = admin()
   const { data: reviews } = await db
     .from('reviews')
-    .select('id, rating, comment, customer_id, created_at, author_name')
+    .select('*')
     .eq('salon_id', salon.id)
     .order('created_at', { ascending: false })
     .limit(20)

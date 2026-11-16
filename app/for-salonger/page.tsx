@@ -4,7 +4,7 @@ import ThemeToggle from '@/components/ThemeToggle'
 import { Logo } from '@/components/ui'
 
 const FEATURES = [
-  { Icon: Smartphone, t: 'En länk i bion', d: 'Kunderna bokar själva dygnet runt – ingen app krävs.' },
+  { Icon: Smartphone, t: 'En länk i bion', d: 'Dela din bokningslänk i Instagram-bion – kunderna bokar själva dygnet runt.' },
   { Icon: CalendarCheck, t: 'Din kalender', d: 'Bokningar landar i Google- och Apple-kalendern.' },
   { Icon: MessageCircle, t: 'DM-bokningar', d: 'Lägg in DM och telefonbokningar på två sekunder.' },
   { Icon: UserX, t: 'Färre no-shows', d: 'Kunden kan avboka själv – tiden blir ledig direkt.' },
@@ -14,7 +14,7 @@ const FEATURES = [
 
 export default function ForSalons() {
   return (
-    <main className="mx-auto max-w-2xl px-5 pb-20 pt-6">
+    <main className="mx-auto max-w-2xl px-5 pb-20 pt-[max(env(safe-area-inset-top),24px)]">
       <header className="flex items-center gap-3">
         <Link href="/"><Logo size={40} /></Link>
         <div className="flex-1" />
@@ -23,7 +23,7 @@ export default function ForSalons() {
       </header>
 
       <section className="rise mt-14">
-        <span className="pill text-gold">Ingen provision · från 59 kr/mån</span>
+        <span className="pill text-gold">Ingen provision · gratis att komma igång</span>
         <h1 className="mt-5 text-[42px] font-bold leading-[1.05] tracking-tight">
           Bokning som <span className="gold-text">bara funkar.</span>
         </h1>

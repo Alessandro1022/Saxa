@@ -7,6 +7,7 @@ import { admin } from '@/lib/supabase/admin'
 import { payCfg } from '@/lib/pay'
 import { getMe } from '@/lib/user'
 import BookingFlow from '@/components/BookingFlow'
+import ReviewList from '@/components/ReviewList'
 import ThemeToggle from '@/components/ThemeToggle'
 import { Avatar, Rating } from '@/components/ui'
 import { Cover } from '@/components/Img'
@@ -29,7 +30,7 @@ async function _load(slug: string) {
     db.from('services').select('id, name, description, duration_min, price_sek').eq('salon_id', salon.id).eq('active', true).order('sort'),
     db.from('salon_rating').select('*').eq('salon_id', salon.id).maybeSingle(),
     db.from('staff_rating').select('*'),
-    db.from('reviews').select('id, rating, comment, created_at, customer_id, staff_id, author_name').eq('salon_id', salon.id).order('created_at', { ascending: false }).limit(12),
+    db.from('reviews').select('*').eq('salon_id', salon.id).order('created_at', { ascending: false }).limit(12),
   ])
   const ids = [...new Set((reviews ?? []).map((r) => r.customer_id as string | null).filter((x): x is string => !!x))]
   const { data: people } = ids.length
@@ -41,7 +42,7 @@ async function _load(slug: string) {
     staff: (staff ?? []).map((s) => ({ ...s, rating: pRate.get(s.id) ?? null })),
     services: services ?? [],
     rating: (sr as R | null) ?? null,
-    reviews: (reviews ?? []).map((r) => ({ ...r, who: (people ?? []).find((p) => p.id === r.customer_id) })),
+    reviews: (reviews ?? []).filter((r) => !r.hidden).map((r) => ({ ...r, who: (people ?? []).find((p) => p.id === r.customer_id) })),
   }
 }
 
@@ -144,35 +145,20 @@ export default async function SalonPage({
           <h2 className="flex items-center gap-2 text-sm font-medium text-mute">
             <Star size={14} className="fill-gold text-gold" /> {rating?.avg?.toFixed(1)} · {rating?.n} omdömen
           </h2>
-          <div className="no-scrollbar -mx-5 mt-3 flex gap-3 overflow-x-auto px-5">
-            {reviews.map((r) => {
+          <ReviewList
+            reviews={reviews.map((r) => {
               const d = new Date(r.created_at)
-              const who = r.author_name ?? r.who?.full_name?.split(' ')[0] ?? 'Kund'
-              return (
-                <div key={r.id} className="card w-[260px] shrink-0 p-4">
-                  <div className="flex items-center gap-2.5">
-                    <Avatar name={who} src={r.who?.avatar_url} size={34} />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">{who}</div>
-                      <div className="text-xs text-mute">{d.getDate()} {MONTHS[d.getMonth()]}</div>
-                    </div>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} size={12} className={i < r.rating ? 'fill-gold text-gold' : 'text-mute/40'} />
-                      ))}
-                    </div>
-                  </div>
-                  {r.comment && <p className="mt-3 line-clamp-4 text-sm leading-relaxed">{r.comment}</p>}
-                  <a
-                    href={`mailto:wehelie@aetossystems.se?subject=${encodeURIComponent(`Rapportera omdöme ${r.id}`)}&body=${encodeURIComponent(`Jag vill rapportera ett omdöme hos ${salon.name}.\n\nOrsak: `)}`}
-                    className="mt-3 inline-block text-[11px] text-mute underline-offset-2 hover:underline"
-                  >
-                    Rapportera
-                  </a>
-                </div>
-              )
+              return {
+                id: r.id,
+                rating: r.rating,
+                comment: r.comment,
+                date: `${d.getDate()} ${MONTHS[d.getMonth()]}`,
+                who: r.author_name ?? r.who?.full_name?.split(' ')[0] ?? 'Kund',
+                avatar: r.who?.avatar_url ?? null,
+                author: r.customer_id ?? null,
+              }
             })}
-          </div>
+          />
         </section>
       )}
     </main>

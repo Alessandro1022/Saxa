@@ -65,7 +65,7 @@ function LoginInner() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col px-6 pb-10 pt-6">
+    <main className="mx-auto flex min-h-dvh max-w-sm flex-col px-6 pb-10 pt-[max(env(safe-area-inset-top),24px)]">
       <div className="flex items-center justify-between">
         <Link href="/" className="icon-btn" aria-label="Tillbaka"><ArrowLeft size={18} /></Link>
         <ThemeToggle />
